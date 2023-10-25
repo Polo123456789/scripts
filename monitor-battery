@@ -1,0 +1,67 @@
+#!/bin/bash
+
+BATTERY="0"
+
+get-status() {
+    acpi -b | grep "Battery $BATTERY" | awk -F'[,:%]' '{print $2, $3}'
+}
+
+main() {
+    get-status | {
+        read -r status capacity
+
+        if [[ $status == Discharging ]]; then
+            if [[ $capacity -le 20 && $capacity -gt 10 ]]; then
+                notify-send -u critical "Battery low" "Battery is at ${capacity}%"
+            elif [[ $capacity -le 10 ]]; then
+                notify-send -u critical "Battery low" "Battery is at ${capacity}%, will suspend in 2 minutes if not charged"
+                sleep 120
+                get-status | {
+                    read -r status capacity
+                                if [[ $status == Discharging && $capacity -le 10 ]]; then
+                                    systemctl suspend
+                                fi
+                            }
+            fi
+        fi
+    }
+}
+
+
+read -r -d '' SYSTEMD_SERVICE << EOM
+[Unit]
+Description=Monitor battery
+
+[Service]
+Type=simple
+ExecStart=/bin/bash -c $HOME/scripts/monitor-battery
+EOM
+
+read -r -d '' SYSTEMD_TIMER << EOM
+[Unit]
+Description=Run monitor-battery every minute
+
+[Timer]
+OnCalendar=minutely
+Unit=monitor-battery.service
+
+[Install]
+WantedBy=timers.target
+EOM
+
+install() {
+    echo "$SYSTEMD_SERVICE" > $HOME/.config/systemd/user/monitor-battery.service
+    echo "$SYSTEMD_TIMER" > $HOME/.config/systemd/user/monitor-battery.timer
+
+    systemctl --user daemon-reload
+    systemctl --user enable monitor-battery.timer
+    systemctl --user start monitor-battery.timer
+
+    systemctl --user status monitor-battery.timer
+}
+
+if [[ $1 == install ]]; then
+    install
+else
+    main
+fi
