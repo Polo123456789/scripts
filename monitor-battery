@@ -13,6 +13,7 @@ main() {
         if [[ $status == Discharging ]]; then
             if [[ $capacity -le 20 && $capacity -gt 10 ]]; then
                 notify-send -u critical "Battery low" "Battery is at ${capacity}%"
+                psbacklight set 20
             elif [[ $capacity -le 10 ]]; then
                 notify-send -u critical "Battery low" "Battery is at ${capacity}%, will suspend in 2 minutes if not charged"
                 sleep 120
