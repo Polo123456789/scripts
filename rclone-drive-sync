@@ -1,0 +1,80 @@
+#!/bin/bash
+
+LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
+LOCAL_DIR="$HOME/sync"
+REMOTE_DIR="gdrive:rclone"
+LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
+RCLONE_LOGFILE="$HOME/scripts/.logs/rclone-drive-sync-rclone"
+LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
+
+export DISPLAY=":1"
+
+log () {
+    echo "($$) $(date) - $*" >> $LOGFILE
+}
+
+
+if ! ping -c1 -W1 -q drive.google.com &> /dev/null; then
+    notify-send -u low "No internet connection, not syncing with drive"
+    exit 0
+fi
+
+if [[ -f $LAST_RUN_FAILED ]]; then
+    notify-send -u critical "Last rclone sync failed, remember to check"
+    exit 1
+fi
+
+if [[ -f $LOCKFILE ]]; then
+    log "Lockfile exists, exiting"
+    notify-send -u low "rclone sync already running"
+    exit 1
+fi
+echo $$ > $LOCKFILE
+
+if [[ $1 == "--force"  ]] || [[ $1 == "-f" ]]; then
+    if [[ $2 == "push" ]]; then
+        echo /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv
+        /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv
+    elif [[ $2 == "pull" ]]; then
+        echo /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv
+        /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv
+    else
+        echo "Invalid argument, use push or pull"
+    fi
+    rm $LOCKFILE
+    exit 0
+elif [[ $1 == "--logs" ]] || [[ $1 == "-l" ]]; then
+    cat $RCLONE_LOGFILE
+    rm $LOCKFILE
+    exit 0
+fi
+
+# Restart logs
+echo "($$) $(date) - Starting sync" > $LOGFILE
+echo "($$) $(date) - Starting sync" > $RCLONE_LOGFILE
+
+/usr/bin/rclone copy $REMOTE_DIR $LOCAL_DIR --log-file=$RCLONE_LOGFILE -L -u -v
+
+if [[ $? -ne 0 ]]; then
+    notify-send -u critical "rclone sync failed"
+    log "rclone sync failed"
+    touch $LAST_RUN_FAILED
+    exit 1
+fi
+
+/usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR --log-file=$RCLONE_LOGFILE -L -v
+
+if [[ $? -ne 0 ]]; then
+    notify-send -u critical "rclone sync failed"
+    log "rclone sync failed"
+    touch $LAST_RUN_FAILED
+    exit 1
+fi
+
+if [[ $1 == "-v" ]]; then
+    cat $RCLONE_LOGFILE
+fi
+
+notify-send -u low "rclone sync complete"
+rm $LOCKFILE
+

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ -z "$IMGBB_API_KEY" ]; then
+    echo "IMGBB_API_KEY is not set"
+    exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo "Usage: $(basename $0) <image file>"
+    exit 1
+fi
+
+image="$1"
+
+echo "Remember that any image uploaded will be publicly accessible"
+read -p "Should we continue? [y/N] " -n 1 -r cont
+
+if [[ ! $cont =~ ^[Yy]$ ]]; then
+    echo ""
+    echo "Aborting..."
+    exit 1
+fi
+
+response=$(curl --location -# \
+  --request POST \
+  "https://api.imgbb.com/1/upload?key=$IMGBB_API_KEY" \
+  --form "image=@$image")
+
+echo "$response" | jq -r '.data.url'
+

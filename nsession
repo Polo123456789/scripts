@@ -1,0 +1,183 @@
+#!/bin/bash
+#
+# Copyright 2023 Pablo Sanchez
+#
+# Copying and distribution of this file, with or without modification, are
+# permitted in any medium provided you do not contact the author about the file
+# or any problems you are having with the file
+
+################################################################################
+# 
+# Help
+#
+################################################################################
+
+help() {
+    echo "Usage:"
+    echo "    nsession                        - Open session with fzf"
+    echo "    nsession [name]                 - Open session"
+    echo "    nsession -s [path] [name]       - Save session"
+    echo "    nsession -d [name]              - Delete session"
+    echo "    nsession -l                     - List sessions"
+    echo "    nsession -h                     - Show this help"
+    echo "    nsession --dmenu                - Open session with dmenu"
+    echo "    nsession --autocomplete         - Autocomplete script"
+}
+
+# Change to your liking
+#
+# Sessions are stored in the following format:
+#
+#   name-of-session|path/to/session
+#
+sessions_file="$HOME/scripts/.logs/nsessions"
+sessions_dir=$(dirname "$sessions_file")
+
+if [ ! -d "$sessions_dir" ]; then
+    mkdir -p "$sessions_dir"
+fi
+
+if [ ! -f "$sessions_file" ]; then
+    touch "$sessions_file"
+fi
+
+
+################################################################################
+# 
+# Utils
+#
+################################################################################
+
+session-name() {
+    cut -d'|' -f1
+}
+
+session-path() {
+    cut -d'|' -f2
+}
+
+list-session-names() {
+    cat "$sessions_file" | session-name
+}
+
+session-path-from-name() {
+    cat "$sessions_file" | grep "^$1|" | session-path
+}
+
+################################################################################
+# 
+# Autocomplete
+#
+################################################################################
+
+_nsession() {
+    # This has to be duplicated
+    sessions_file="$HOME/scripts/.logs/nsessions"
+    session-name() {
+        cut -d'|' -f1
+    }
+    list-session-names() {
+        cat "$sessions_file" | session-name
+    }
+
+
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="-s -d -l -h --autocomplete --dmenu"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    case "${prev}" in
+        -s)
+            _filedir
+            return 0
+            ;;
+        -d)
+            COMPREPLY=( $(compgen -W "$(list-session-names)" -- ${cur}) )
+            return 0
+            ;;
+        *)
+            COMPREPLY=( $(compgen -W "$(list-session-names) $opts" -- ${cur}) )
+            return 0
+            ;;
+    esac
+
+}
+
+# Usage: echo 'eval "$(nsession --autocomplete)"' >> ~/.bashrc
+output-autocomplete() {
+    declare -f _nsession
+    echo "complete -F _nsession nsession"
+}
+
+################################################################################
+#
+# Main
+#
+################################################################################
+
+case "$1" in
+    -s)
+        if [ -z "$2" ] && [ -z "$3" ]; then
+            echo "Usage: nsession -s [path] [name]"
+            exit 1
+        fi
+        path="$(pwd)/$2"
+        name="$3"
+        echo "$name|$path" >> "$sessions_file"
+        ;;
+    -d)
+        if [ -z "$2" ]; then
+            echo "Usage: nsession -d [name]"
+            exit 1
+        fi
+        name="$2"
+        sed -i "/^$name|/d" "$sessions_file"
+        ;;
+    -l)
+        cat "$sessions_file" | session-name
+        ;;
+    -h)
+        help
+        ;;
+    --autocomplete)
+        output-autocomplete
+        ;;
+    --dmenu)
+        session_name=$(list-session-names | dmenu -i -l 10 -p "Session: ")
+        if [ -z "$session_name" ]; then
+            echo "Session not selected, exiting..."
+            exit 0;
+        else
+            session=$(session-path-from-name "$session_name")
+            source ~/.bashrc
+            kitty -- bash -i nvim -S "$session"
+        fi
+
+        ;;
+    *)
+        if [ -z "$1" ]; then
+            session_name=$(list-session-names | fzf --reverse)
+            if [ -z "$session_name" ]; then
+                session=""
+            else
+                session=$(session-path-from-name "$session_name")
+            fi
+        else
+            session=$(session-path-from-name "$1")
+        fi
+
+        if [ -z "$session" ]; then
+            echo "Session not selected, exiting..."
+            exit 0
+        fi
+
+        nvim -S "$session"
+        ;;
+
+esac

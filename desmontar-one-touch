@@ -1,0 +1,6 @@
+#!/bin/bash
+sudo umount -v /mnt/one-touch-pablo
+sudo fsck /dev/disk/by-uuid/7ec83e5c-f2f5-4eef-a5db-d16ac45f0f83
+read -p "Press enter to continue..." dummy
+unset dummy
+

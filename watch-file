@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+tmp_dir="$HOME/tmp"
+md5_file=$(mktemp -p "$tmp_dir" .watch-file.XXXXXXXXX.md5)
+
+echo "Using $md5_file"
+
+file="$1"
+shift
+cmd="$@"
+
+md5sum "$file" > $md5_file
+
+while true; do
+    md5sum -c $md5_file > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        md5sum "$file" > $md5_file
+        echo "<$(date)>: $file changed"
+        $cmd
+    fi
+    sleep 1
+done

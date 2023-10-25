@@ -1,0 +1,30 @@
+#!/bin/bash
+
+format_time() {
+    seconds=$1
+    ((h=seconds/3600))
+    ((m=(seconds%3600)/60))
+    ((s=seconds%60))
+    printf " %02d:%02d:%02d \n" $h $m $s
+}
+
+draw_time() {
+    format_time $1 | toilet -F border
+}
+
+trap ctrl_c INT
+
+ctrl_c() {
+    echo ""
+    echo "Total: $(format_time $SECONDS)"
+    exit 0
+}
+
+SECONDS=0
+
+while true; do
+    clear
+    draw_time $SECONDS
+    sleep 1
+done
+

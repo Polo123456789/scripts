@@ -1,0 +1,25 @@
+#!/bin/bash
+
+passwords_dir="$HOME/.password-store/"
+
+cd "$passwords_dir"
+
+passwords=$(find -type f -name "*.gpg")
+selected_password=$(echo "$passwords" | dmenu -i -l 15 -p "Password: ")
+
+if [[ -z "$selected_password" ]]; then
+    exit 1
+fi
+
+selected_password=${selected_password:2}
+selected_password=${selected_password%.gpg}
+
+if [[ "$1" == "input" ]]; then
+    sleep 1
+    pass "$selected_password" | xdotool type --clearmodifiers --file -
+elif [[ "$1" == "copy" ]]; then
+    pass -c "$selected_password"
+else
+    echo "Invalid argument"
+    echo "$selected_password"
+fi

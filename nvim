@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# If no arguments, check for session files (session.vim or .vim/session.vim) and
+# load them if they exist. Else, just run normally
+
+nvim_exec="/snap/bin/nvim"
+
+if [ $# -eq 0 ]; then
+    if [ -f session.vim ]; then
+        $nvim_exec -S session.vim
+    elif [ -f .vim/session.vim ]; then
+        $nvim_exec -S .vim/session.vim
+    else
+        $nvim_exec
+    fi
+else
+    $nvim_exec "$@"
+fi

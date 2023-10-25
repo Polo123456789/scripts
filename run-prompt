@@ -1,0 +1,34 @@
+#!/bin/bash -x
+
+# V1
+# gnome-terminal
+# i3-msg floating enable
+
+# V2
+# cmd=$(zenity --entry --text='Comando:')
+# if [[ -z "$cmd" ]]; then
+#     exit 0
+# fi
+# echo "$cmd" > /home/pablo/scripts/.PS_RUN_PROMPT_LAST_COMMAND
+# eval "$cmd" &> /home/pablo/scripts/.PS_RUN_PROMPT_LAST_OUTPUT
+
+# V3
+history_file="/home/pablo/scripts/.logs/run-prompt-history"
+
+cmd=$(cat $history_file | dmenu -l 20 -p "Comando:")
+if [[ -z "$cmd" ]]; then
+    # Press exit to run without showing history
+    cmd=$(dmenu -p "Comando:")
+    if [[ -z "$cmd" ]]; then
+        # Exit again means quit
+        exit 0
+    fi
+fi
+
+echo "$cmd" > /home/pablo/scripts/.logs/run-prompt-last-command
+echo "$cmd" >> "$history_file"
+
+tail -n 100 "$history_file" | sort -u > "$history_file.tmp"
+mv "$history_file.tmp" "$history_file"
+
+eval "$cmd" &> /home/pablo/scripts/.logs/run-prompt-last-output
