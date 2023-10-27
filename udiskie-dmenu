@@ -1,0 +1,39 @@
+#!/bin/bash
+
+devices=$(udiskie-info -a)
+
+if [[ -z $devices ]]; then
+    echo "No devices found"
+    exit 1
+fi
+
+# Check if $1 is a loop
+device-is-loop() {
+    if [[ -z $1 ]]; then
+        return 1
+    fi
+
+    if [[ $1 == /dev/loop* ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+case $1 in
+    mount)
+
+        device=$(echo "$devices" | dmenu -i -p "Mount device" -l 10)
+        if [ -z "$device" ]; then
+            exit 0
+        fi
+        udiskie-mount "$device"
+        ;;
+    unmount)
+        device=$(echo "$devices" | dmenu -i -p "Unmount device" -l 10)
+        if [ -z "$device" ]; then
+            exit 0
+        fi
+        udiskie-umount "$device"
+        ;;
+esac
