@@ -7,18 +7,11 @@ if [[ -z $devices ]]; then
     exit 1
 fi
 
-# Check if $1 is a loop
-device-is-loop() {
-    if [[ -z $1 ]]; then
-        return 1
-    fi
+if [[ ! -z $UDISKIE_DMENU_IGNORE_LOOPS ]]; then
+    devices=$(echo "$devices" | grep -v "loop")
+    echo $devices
+fi
 
-    if [[ $1 == /dev/loop* ]]; then
-        return 0
-    fi
-
-    return 1
-}
 
 case $1 in
     mount)
@@ -35,5 +28,9 @@ case $1 in
             exit 0
         fi
         udiskie-umount "$device"
+        ;;
+    *)
+        echo "Usage: udiskie-dmenu [mount|unmount]"
+        exit 1
         ;;
 esac
