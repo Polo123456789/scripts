@@ -2,7 +2,7 @@
 
 LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
 LOCAL_DIR="$HOME/sync"
-REMOTE_DIR="gdrive:rclone"
+REMOTE_DIR="gnotes:rclone"
 LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
 RCLONE_LOGFILE="$HOME/scripts/.logs/rclone-drive-sync-rclone"
 LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"

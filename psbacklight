@@ -1,12 +1,11 @@
 #!/bin/bash
 
-# Modify depending on the system
-brightness_file="/sys/class/backlight/intel_backlight/brightness"
-max_brightness_file="/sys/class/backlight/intel_backlight/max_brightness"
+brightness_file="/sys/class/backlight/radeon_bl0/brightness"
+max_brightness_file="/sys/class/backlight/radeon_bl0/max_brightness"
 
 current_brightness=$(cat $brightness_file)
 max_brightness=$(cat $max_brightness_file)
-increment=500
+increment=25
 
 case $1 in
     up)
