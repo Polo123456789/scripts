@@ -7,7 +7,7 @@ LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
 RCLONE_LOGFILE="$HOME/scripts/.logs/rclone-drive-sync-rclone"
 LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
 
-export DISPLAY=":1"
+export DISPLAY=":0"
 
 log () {
     echo "($$) $(date) - $*" >> $LOGFILE
