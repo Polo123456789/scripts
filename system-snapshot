@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [[ $1 == "create" ]]; then
+    sudo lvcreate --size 80G --snapshot --name snap-arch-root /dev/vg-root/arch-root
+    exit 0
+fi
+
+if [[ $1 == "merge" ]]; then
+    sudo lvconvert --merge /dev/vg-root/snap-arch-root
+    exit 0
+fi
+
+if [[ $1 == "remove" ]]; then
+    sudo lvremove vg-root/snap-arch-root
+    exit 0
+fi
+
+if [[ $1 == "refresh" ]]; then
+    sudo lvchange --refresh vg-root
+    exit 0
+fi
+
+echo "Usage: $0 [create / merge / remove / refresh]"
