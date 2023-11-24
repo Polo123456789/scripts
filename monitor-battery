@@ -65,6 +65,13 @@ install() {
 
 if [[ $1 == install ]]; then
     install
+elif [[ $1 == status ]]; then
+    systemctl --user status monitor-battery.timer
+elif [[ $1 == stop ]]; then
+    systemctl --user stop monitor-battery.timer
+    systemctl --user stop monitor-battery.service
+elif [[ $1 == start ]]; then
+    systemctl --user start monitor-battery.timer
 else
     main
 fi

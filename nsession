@@ -156,7 +156,7 @@ case "$1" in
         else
             session=$(session-path-from-name "$session_name")
             source ~/.bashrc
-            kitty -- bash -i nvim -S "$session"
+            kitty -- nvim -S "$session"
         fi
 
         ;;
