@@ -1,0 +1,18 @@
+#!/bin/bash
+
+TMPDIR="$HOME/tmp"
+FILENAME=".lockscreen.png"
+
+if [[ -f $TMPDIR/$FILENAME ]]; then
+    rm $TMPDIR/$FILENAME
+fi
+
+flameshot full -p $TMPDIR/$FILENAME
+
+if [[ $1 == "blur" ]]; then
+    convert $TMPDIR/$FILENAME -blur 0x5 $TMPDIR/$FILENAME
+elif [[ $1 == "pixelate" ]]; then
+    convert $TMPDIR/$FILENAME -scale 10% -scale 1000% $TMPDIR/$FILENAME
+fi
+
+i3lock -befi $TMPDIR/$FILENAME --nofork
