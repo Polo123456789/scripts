@@ -1,0 +1,52 @@
+#!/bin/bash
+
+cyan_text() {
+    echo -e "\e[36m$*\e[0m"
+}
+
+file="$1"
+
+if [ -z "$file" ]; then
+    echo "Usage: $0 <file>"
+    exit 1
+fi
+
+mime=$(xdg-mime query filetype "$file")
+current_default=$(xdg-mime query default "$mime")
+
+file=$(basename "$file")
+
+echo "File $(cyan_text $file) has mime type $(cyan_text "$mime")"
+
+if [ ! -z "$current_default" ]; then
+    echo "Current default for $(cyan_text "$mime") is $(cyan_text "$current_default")"
+    read -p "Change default for $(cyan_text "$mime")? [y/n] " -n 1 -r ans
+
+    if [[ "$ans" =~ ^[Nn]$ ]]; then
+        exit 0
+    fi
+fi
+
+list_available_applications() {
+    while read -r line; do
+        if [ ! -z "$line" ]; then
+            basename "$line"
+        fi
+    done < <(ls -1 /usr/share/applications/)
+    while read -r line; do
+        if [ ! -z "$line" ]; then
+            basename "$line"
+        fi
+    done < <(ls -1 ~/.local/share/applications/)
+}
+
+new_default=$(list_available_applications | fzf --reverse --prompt="Select new default for $mime: ")
+
+if [ -z "$new_default" ]; then
+    echo "No new default selected"
+    exit 0
+fi
+
+xdg-mime default "$new_default" "$mime"
+echo ""
+echo "New default for $(cyan_text "$mime") is $(cyan_text "$new_default")"

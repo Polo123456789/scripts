@@ -1,80 +1,179 @@
 #!/bin/bash
 
-LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
-LOCAL_DIR="$HOME/sync"
-REMOTE_DIR="gdrive:rclone"
-LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
-RCLONE_LOGFILE="$HOME/scripts/.logs/rclone-drive-sync-rclone"
-LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
-
-export DISPLAY=":1"
-
-log () {
-    echo "($$) $(date) - $*" >> $LOGFILE
+help() {
+    echo "Usage: rclone-drive-sync [OPTION]..."
+    echo "Syncs a local directory with a google drive directory using rclone."
+    echo ""
+    echo "  -h, --help                display this help and exit"
+    echo "  -f, --force [push|pull]   force push or pull, always vebose, no logfile"
+    echo "  -l, --logs                display the last logs"
+    echo "  -v, --verbose             verbose output"
+    echo "  -c, --clear               clear the logs, and lockfiles"
 }
 
+CONFIG_FILE="$HOME/.config/rclone-drive-sync/conf"
 
-if ! ping -c1 -W1 -q drive.google.com &> /dev/null; then
-    notify-send -u low "No internet connection, not syncing with drive"
-    exit 0
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+else
+    LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
+    LOCAL_DIR="$HOME/sync"
+    REMOTE_DIR="gdrive:rclone"
+    LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
+    LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
+    DISPLAY=":1"
 fi
 
-if [[ -f $LAST_RUN_FAILED ]]; then
-    notify-send -u critical "Last rclone sync failed, remember to check"
-    exit 1
-fi
+log () {
+    echo "$(date) - $*" >> "$LOGFILE"
+}
 
-if [[ -f $LOCKFILE ]]; then
-    log "Lockfile exists, exiting"
-    notify-send -u low "rclone sync already running"
-    exit 1
-fi
-echo $$ > $LOCKFILE
+log_error () {
+    echo "$(date) - $*" >> "$LOGFILE"
+    echo "$(date) - $*" >> "$LAST_RUN_FAILED"
+    notify-send -u critical "$*"
+}
 
-if [[ $1 == "--force"  ]] || [[ $1 == "-f" ]]; then
-    if [[ $2 == "push" ]]; then
-        echo /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv
-        /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv
-    elif [[ $2 == "pull" ]]; then
-        echo /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv
-        /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv
-    else
-        echo "Invalid argument, use push or pull"
+log_info () {
+    echo "$(date) - $*" >> "$LOGFILE"
+    notify-send -u low "$*"
+}
+
+follow_logs() {
+    tail -f "$LOGFILE" --pid=$$ &
+}
+
+last_logs() {
+    if [ -f "$LAST_RUN_FAILED" ]; then
+        echo "NOTE: Last run failed"
     fi
-    rm $LOCKFILE
-    exit 0
-elif [[ $1 == "--logs" ]] || [[ $1 == "-l" ]]; then
-    cat $RCLONE_LOGFILE
-    rm $LOCKFILE
-    exit 0
-fi
+    cat "$LOGFILE"
+}
 
-# Restart logs
-echo "($$) $(date) - Starting sync" > $LOGFILE
-echo "($$) $(date) - Starting sync" > $RCLONE_LOGFILE
+clear_logs() {
+    echo "" > "$LOGFILE"
+    rm -f "$LAST_RUN_FAILED"
+    rm -f "$LOCKFILE"
+}
 
-/usr/bin/rclone copy $REMOTE_DIR $LOCAL_DIR --log-file=$RCLONE_LOGFILE -L -u -v
+rotate_logs() {
+    if [ -f "$LOGFILE.7" ]; then
+        rm "$LOGFILE.7"
+    fi
+    for i in {6..0}; do
+        if [ -f "$LOGFILE.$i" ]; then
+            mv "$LOGFILE.$i" "$LOGFILE.$((i+1))"
+        fi
+    done
+    if [ -f "$LOGFILE" ]; then
+        mv "$LOGFILE" "$LOGFILE.0"
+    fi
+}
 
-if [[ $? -ne 0 ]]; then
-    notify-send -u critical "rclone sync failed"
-    log "rclone sync failed"
-    touch $LAST_RUN_FAILED
-    exit 1
-fi
+pre_sync_checks() {
+    if [ -f "$LAST_RUN_FAILED" ]; then
+        log_info "Last run failed, please check the logs, or clear with -c"
+        exit 1
+    fi
+    if [ -f "$LOCKFILE" ]; then
+        log_info "Already running, please check the logs, or clear with -c"
+        exit 1
+    fi
+}
 
-/usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR --log-file=$RCLONE_LOGFILE -L -v
+pre_sync() {
+    pre_sync_checks
+    touch "$LOCKFILE"
+    rotate_logs
+    log "Starting sync"
+}
 
-if [[ $? -ne 0 ]]; then
-    notify-send -u critical "rclone sync failed"
-    log "rclone sync failed"
-    touch $LAST_RUN_FAILED
-    exit 1
-fi
+post_sync() {
+    rm -f "$LOCKFILE"
+}
 
-if [[ $1 == "-v" ]]; then
-    cat $RCLONE_LOGFILE
-fi
+normal_sync() {
+    pre_sync
 
-notify-send -u low "rclone sync complete"
-rm $LOCKFILE
+    /usr/bin/rclone copy $REMOTE_DIR $LOCAL_DIR --log-file=$LOGFILE -L -u -v
+    if [[ $? -ne 0 ]]; then
+        log_error "rclone cloud to local copy failed"
+        exit 1
+    fi
+
+    /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR --log-file=$LOGFILE -L -v
+    if [[ $? -ne 0 ]]; then
+        log_error "rclone local to cloud sync failed"
+        exit 1
+    fi
+    
+    post_sync
+}
+
+forced_push() {
+    pre_sync
+    follow_logs
+
+    log "Forced Push"
+    /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv --log-file=$LOGFILE
+
+    post_sync
+}
+
+forced_pull() {
+    pre_sync
+    follow_logs
+
+    log "Forced Pull"
+    /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv --log-file=$LOGFILE
+    post_sync
+}
+
+opts=$(getopt -o hf:lvc --long help,force:,logs,verbose,clear -- "$@") || help
+eval set -- "$opts"
+
+while true; do
+    case "$1" in
+        -h | --help)
+            help
+            exit 0
+            ;;
+        -f | --force)
+            case "$2" in
+                push)
+                    forced_push
+                    exit 0
+                    ;;
+                pull)
+                    forced_pull
+                    exit 0
+                    ;;
+                *)
+                    help
+                    exit 1
+                    ;;
+            esac
+            ;;
+        -l | --logs)
+            last_logs
+            exit 0
+            ;;
+        -v | --verbose)
+            follow_logs
+            ;;
+        -c | --clear)
+            clear_logs
+            exit 0
+            ;;
+        --)
+            normal_sync
+            exit 0
+            ;;
+        *)
+            help
+            exit 1
+            ;;
+    esac
+    shift
+done
 
