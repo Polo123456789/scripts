@@ -50,12 +50,6 @@ last_logs() {
     cat "$LOGFILE"
 }
 
-clear_logs() {
-    echo "" > "$LOGFILE"
-    rm -f "$LAST_RUN_FAILED"
-    rm -f "$LOCKFILE"
-}
-
 rotate_logs() {
     if [ -f "$LOGFILE.7" ]; then
         rm "$LOGFILE.7"
@@ -68,6 +62,12 @@ rotate_logs() {
     if [ -f "$LOGFILE" ]; then
         mv "$LOGFILE" "$LOGFILE.0"
     fi
+}
+
+clear_logs() {
+    rotate_logs
+    rm -f "$LAST_RUN_FAILED"
+    rm -f "$LOCKFILE"
 }
 
 pre_sync_checks() {
