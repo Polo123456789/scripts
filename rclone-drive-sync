@@ -79,6 +79,10 @@ pre_sync_checks() {
         log_info "Already running, please check the logs, or clear with -c"
         exit 1
     fi
+    if ! ping -c 1 drive.google.com &> /dev/null; then
+        log_info "No network connection"
+        exit 1
+    fi
 }
 
 pre_sync() {
