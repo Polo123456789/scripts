@@ -1,5 +1,7 @@
 #!/bin/bash
 
+UDISKIE_DMENU_IGNORE_LOOPS="true"
+
 devices=$(udiskie-info -a)
 
 if [[ -z $devices ]]; then

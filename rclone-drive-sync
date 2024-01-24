@@ -90,6 +90,9 @@ pre_sync() {
     touch "$LOCKFILE"
     rotate_logs
     log "Starting sync"
+    if [ "$VERBOSE" = true ]; then
+        follow_logs
+    fi
 }
 
 post_sync() {
@@ -133,7 +136,11 @@ forced_pull() {
     post_sync
 }
 
-opts=$(getopt -o hf:lvc --long help,force:,logs,verbose,clear -- "$@") || help
+opts=$(getopt -o hf:lvc --long help,force:,logs,verbose,clear -- "$@")
+if [ $? -ne 0 ]; then
+    help
+    exit 1
+fi
 eval set -- "$opts"
 
 while true; do
@@ -163,7 +170,7 @@ while true; do
             exit 0
             ;;
         -v | --verbose)
-            follow_logs
+            VERBOSE=true
             ;;
         -c | --clear)
             clear_logs
@@ -180,4 +187,3 @@ while true; do
     esac
     shift
 done
-

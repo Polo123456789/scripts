@@ -19,5 +19,4 @@ fi
 
 i3lock -befi $TMPDIR/$FILENAME --nofork -p win &
 
-
 sleep 2
