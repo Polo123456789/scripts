@@ -6,4 +6,4 @@ if [ $# -eq 0 ]
     exit 1
 fi
 
-speaker-test -t sine -f 1000 -l 1 & sleep $1 && kill -9 $!
+speaker-test -t sine -f 1000 -l 1 & sleep "$1" && kill -9 $!

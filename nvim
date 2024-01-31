@@ -3,7 +3,7 @@
 # If no arguments, check for session files (session.vim or .vim/session.vim) and
 # load them if they exist. Else, just run normally
 
-nvim_exec="/snap/bin/nvim"
+nvim_exec="/usr/bin/nvim"
 
 if [ $# -eq 0 ]; then
     if [ -f session.vim ]; then

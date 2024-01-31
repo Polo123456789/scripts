@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 BATTERY="0"
 
@@ -31,6 +31,7 @@ main() {
 }
 
 
+SYSTEMD_SERVICE_PATH="$HOME/.config/systemd/user/monitor-battery.service"
 read -r -d '' SYSTEMD_SERVICE << EOM
 [Unit]
 Description=Monitor battery
@@ -40,6 +41,7 @@ Type=simple
 ExecStart=/bin/bash -c $HOME/scripts/monitor-battery
 EOM
 
+SYSTEMD_TIMER_PATH="$HOME/.config/systemd/user/monitor-battery.timer"
 read -r -d '' SYSTEMD_TIMER << EOM
 [Unit]
 Description=Run monitor-battery every minute
@@ -53,8 +55,10 @@ WantedBy=timers.target
 EOM
 
 install() {
-    echo "$SYSTEMD_SERVICE" > $HOME/.config/systemd/user/monitor-battery.service
-    echo "$SYSTEMD_TIMER" > $HOME/.config/systemd/user/monitor-battery.timer
+    mkdir -p $(dirname "$SYSTEMD_SERVICE_PATH")
+    mkdir -p $(dirname "$SYSTEMD_TIMER_PATH")
+    echo "$SYSTEMD_SERVICE" > "$SYSTEMD_SERVICE_PATH"
+    echo "$SYSTEMD_TIMER" > "$SYSTEMD_TIMER_PATH"
 
     systemctl --user daemon-reload
     systemctl --user enable monitor-battery.timer
