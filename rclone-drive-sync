@@ -21,7 +21,7 @@ else
     REMOTE_DIR="gdrive:rclone"
     LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
     LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
-    DISPLAY=":1"
+    DISPLAY=":0"
 fi
 
 log () {
