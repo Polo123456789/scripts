@@ -9,7 +9,7 @@ format_time() {
 }
 
 draw_time() {
-    format_time $1 | toilet -F border
+    format_time "$1" | toilet -F border
 }
 
 trap ctrl_c INT

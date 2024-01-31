@@ -10,12 +10,12 @@ file="$1"
 shift
 cmd="$@"
 
-md5sum "$file" > $md5_file
+md5sum "$file" > "$md5_file"
 
 while true; do
-    md5sum -c $md5_file > /dev/null 2>&1
+    md5sum -c "$md5_file" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        md5sum "$file" > $md5_file
+        md5sum "$file" > "$md5_file"
         echo "<$(date)>: $file changed"
         $cmd
     fi

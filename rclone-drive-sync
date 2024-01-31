@@ -102,13 +102,13 @@ post_sync() {
 normal_sync() {
     pre_sync
 
-    /usr/bin/rclone copy $REMOTE_DIR $LOCAL_DIR --log-file=$LOGFILE -L -u -v
+    /usr/bin/rclone copy "$REMOTE_DIR" "$LOCAL_DIR" --log-file="$LOGFILE" -L -u -v
     if [[ $? -ne 0 ]]; then
         log_error "rclone cloud to local copy failed"
         exit 1
     fi
 
-    /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR --log-file=$LOGFILE -L -v
+    /usr/bin/rclone sync "$LOCAL_DIR" "$REMOTE_DIR" --log-file="$LOGFILE" -L -v
     if [[ $? -ne 0 ]]; then
         log_error "rclone local to cloud sync failed"
         exit 1
@@ -122,7 +122,7 @@ forced_push() {
     follow_logs
 
     log "Forced Push"
-    /usr/bin/rclone sync $LOCAL_DIR $REMOTE_DIR -Lv --log-file=$LOGFILE
+    /usr/bin/rclone sync "$LOCAL_DIR" "$REMOTE_DIR" -Lv --log-file="$LOGFILE"
 
     post_sync
 }
@@ -132,7 +132,7 @@ forced_pull() {
     follow_logs
 
     log "Forced Pull"
-    /usr/bin/rclone sync $REMOTE_DIR $LOCAL_DIR -Lv --log-file=$LOGFILE
+    /usr/bin/rclone sync "$REMOTE_DIR" "$LOCAL_DIR" -Lv --log-file="$LOGFILE"
     post_sync
 }
 

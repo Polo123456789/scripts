@@ -24,10 +24,10 @@ case $1 in
         ;;
 esac
 
-if [ $new_brightness -gt $max_brightness ]; then
+if [ "$new_brightness" -gt "$max_brightness" ]; then
     new_brightness=$max_brightness
-elif [ $new_brightness -lt 0 ]; then
+elif [ "$new_brightness" -lt 0 ]; then
     new_brightness=0
 fi
 
-echo $new_brightness > $brightness_file
+echo "$new_brightness" > $brightness_file

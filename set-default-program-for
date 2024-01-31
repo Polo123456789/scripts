@@ -16,7 +16,7 @@ current_default=$(xdg-mime query default "$mime")
 
 file=$(basename "$file")
 
-echo "File $(cyan_text $file) has mime type $(cyan_text "$mime")"
+echo "File $(cyan_text "$file") has mime type $(cyan_text "$mime")"
 
 if [ ! -z "$current_default" ]; then
     echo "Current default for $(cyan_text "$mime") is $(cyan_text "$current_default")"
