@@ -1,9 +1,9 @@
-#!/bin/bash -x
+#!/bin/bash
 
 BATTERY="0"
 
 get-status() {
-    acpi -b | grep "Battery $BATTERY" | awk -F'[,:%]' '{print $2, $3}'
+    acpi -b | grep -v "unavailable" | head -n 1 | awk -F'[,:%]' '{print $2, $3}'
 }
 
 main() {
