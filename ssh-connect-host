@@ -1,0 +1,26 @@
+#!/bin/bash
+
+
+# Get hosts from ~/.ssh/config
+hosts=$(awk '/^Host / {print $2}' ~/.ssh/config)
+
+if [ -t 1 ]; then
+    host=$(echo "$hosts" | fzf --height 25 --reverse --prompt="SSH to: ")
+
+    ssh_cmd="ssh"
+    if [[ "$TERM" == "xterm-kitty" ]]; then
+        ssh_cmd="kitty +kitten ssh"
+    fi
+    
+    if [ -n "$host" ]; then
+        $ssh_cmd $host
+    fi
+else
+    host=$(echo "$hosts" | dmenu -i -l 25 -p "SSH to: ")
+
+    if [ -n "$host" ]; then
+        kitty kitty +kitten ssh $host
+    fi
+fi
+
+
