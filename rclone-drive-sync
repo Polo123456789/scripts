@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DISPLAY=:0
+
 help() {
     echo "Usage: rclone-drive-sync [OPTION]..."
     echo "Syncs a local directory with a google drive directory using rclone."
@@ -21,7 +23,6 @@ else
     REMOTE_DIR="gdrive:rclone"
     LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
     LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
-    DISPLAY=":0"
 fi
 
 log () {

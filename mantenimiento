@@ -1,0 +1,70 @@
+#!/bin/bash -x
+
+export DISPLAY=:0
+
+operation="$1"
+
+volume_group="pablo-vivobook-debian-vg"
+root="/dev/pablo-vivobook-debian-vg/root"
+snapshot_name="root-snapshot"
+snapshot_size="24G"
+snapshot_status_file="$HOME/scripts/.logs/manteminiento-snapshot"
+
+update_everything() {
+    nvim -c "PlugUpgrade | PlugUpdate | PlugClean | qall"
+    sudo nala upgrade
+    ruffle-update
+    nice -n 9 tldr --update
+}
+
+check_system_status() {
+    echo "check_system_status: Pendiente de implementar"
+}
+
+create_snapshot() {
+    sudo lvcreate --size "$snapshot_size" --snapshot --name "$snapshot_name" "$root"
+    touch "$snapshot_status_file"
+}
+
+delete_snapshot() {
+    sudo lvremove -f "$volume_group/$snapshot_name"
+    rm "$snapshot_status_file"
+}
+
+restore_snapshot() {
+    sudo lvconvert --merge "$volume_group/$snapshot_name"
+}
+
+snapshot_status() {
+    if [[ -f "$snapshot_status_file" ]]; then
+        echo "Snapshot activo"
+    fi
+}
+
+
+if [[ -z "$operation" ]]; then
+    echo "Falta el tipo de operación [normal, snapshot status, exito, revertir, notificar]"
+elif [[ "$operation" == "normal" ]]; then
+    check_system_status
+    create_snapshot
+    update_everything
+elif [[ "$operation" == "snapshot" ]]; then
+    create_snapshot
+elif [[ "$operation" == "status" ]]; then
+    check_system_status
+    if [[ -n $(snapshot_status) ]]; then
+        echo "Snapshot activo"
+    else
+        echo "No hay snapshot activo"
+    fi
+elif [[ "$operation" == "exito" ]]; then
+    delete_snapshot
+elif [[ "$operation" == "revertir" ]]; then
+    restore_snapshot
+elif [[ "$operation" == "notificar" ]]; then
+    if [[ -n $(snapshot_status) ]]; then
+        notify-send -u critical "Mantenimiento" "Recuerda que hay un snapshot activo, no olvides eliminarlo cuando se haya probado la estabilidad del sistema"
+    fi
+else
+    echo "Operación no reconocida"
+fi
