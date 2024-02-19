@@ -5,6 +5,7 @@ export DISPLAY=:0
 update_everything() {
     nvim -c "PlugUpgrade | PlugUpdate | PlugClean | qall"
     sudo nala upgrade
+    flatpak update
     ruffle-update
     nice -n 9 tldr --update
 }
