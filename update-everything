@@ -1,0 +1,12 @@
+#!/bin/bash -x
+
+export DISPLAY=:0
+
+update_everything() {
+    nvim -c "PlugUpgrade | PlugUpdate | PlugClean | qall"
+    sudo nala upgrade
+    ruffle-update
+    nice -n 9 tldr --update
+}
+
+update_everything

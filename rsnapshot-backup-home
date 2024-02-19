@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# set -e
+
+DISPLAY=:0
+SLEEP_TIME=150
+CONFIG_FILE="$HOME/.config/rsnapshot/rsnapshot.conf"
+SCRIPT_FILE="$HOME/scripts/rsnapshot-backup-home"
+AUTOROTATE_SCRIPT="$HOME/.local/bin/autorotate-rsnapshot.sh"
+BACKUP_NICENESS=19
+SNAPSHOT_ROOT=$(awk '/^snapshot_root/ {print $2}' "$CONFIG_FILE")
+SNAPSHOT_LAST_BACKUP_FOLDER="daily.0/localhost/home/pablo/"
+LOGFILE="$HOME/scripts/.logs/rsnapshot-backup-home-rclone.log"
+RCLONE_BACKUP_ROOT="gbackup:backup"
+
+
+SERVICE_NAME="rsnapshot-backup-home"
+SYSTEMD_SERVICE_NAME="rsnapshot-backup-home.service"
+SYSTEMD_TIMER_NAME="rsnapshot-backup-home.timer"
+SYSTEMD_USER_PATH="$HOME/.config/systemd/user"
+
+SYSTEMD_SERVICE_CONTENTS="
+[Unit]
+Description=rsnapshot backup home
+
+[Service]
+Type=oneshot
+ExecStart=$SCRIPT_FILE
+"
+
+SYSTEMD_TIMER_CONTENTS="
+[Unit]
+Description=Run rsnapshot-backup-home every day
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+"
+
+if [ "$1" == "--install" ]; then
+    echo "Installing $SERVICE_NAME"
+    mkdir -p "$SYSTEMD_USER_PATH"
+    echo "$SYSTEMD_SERVICE_CONTENTS" > "$SYSTEMD_USER_PATH/$SYSTEMD_SERVICE_NAME"
+    echo "$SYSTEMD_TIMER_CONTENTS" > "$SYSTEMD_USER_PATH/$SYSTEMD_TIMER_NAME"
+    systemctl --user enable "$SYSTEMD_TIMER_NAME"
+    systemctl --user start "$SYSTEMD_TIMER_NAME"
+    echo "Done"
+    exit 0
+fi
+
+if [ "$1" == "--no-delay" ]; then
+    SLEEP_TIME=0
+fi
+
+notify-send -u critical "Backup" "El backup diario empezara en 5 minutos. Conecte el disco duro one touch, y la laptop a la corriente."
+sleep $SLEEP_TIME
+
+if [ ! -d "$SNAPSHOT_ROOT" ]; then
+    notify-send -u critical "Backup" "No se encontro el directorio de snapshots. Verifique que el disco duro one touch este conectado."
+fi
+
+if ! on_ac_power; then
+    notify-send -u critical "Backup" "La laptop no esta conectada a la corriente. Conectela para garantizar que el backup se realice correctamente."
+fi
+
+sleep $SLEEP_TIME
+
+if [ ! -d "$SNAPSHOT_ROOT" ]; then
+    notify-send -u critical "Backup" "No se encontro el directorio de snapshots. No se puede realizar el backup."
+    exit 1
+fi
+
+notify-send -u critical "Backup" "Iniciando backup..."
+
+$HOME/scripts/list-installed-packages > $HOME/scripts/.logs/installed-packages
+
+systemd-inhibit nice -n $BACKUP_NICENESS $AUTOROTATE_SCRIPT -c "$CONFIG_FILE"
+if [ $? -eq 0 ]; then
+    notify-send -u critical "Backup" "Backup completado. Sincronizando con drive"
+else
+    notify-send -u critical "Backup" "Ocurrio un error al realizar el backup."
+    exit 1
+fi
+
+systemd-inhibit rclone sync "$SNAPSHOT_ROOT/$SNAPSHOT_LAST_BACKUP_FOLDER" "$RCLONE_BACKUP_ROOT" -v --log-file "$LOGFILE" --fast-list --drive-chunk-size=64M
+
+if [ $? -eq 0 ]; then
+    notify-send -u critical "Backup" "Sincronizacion completada."
+else
+    notify-send -u critical "Backup" "Ocurrio un error al sincronizar con drive."
+    exit 1
+fi
