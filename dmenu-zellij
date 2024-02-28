@@ -1,0 +1,9 @@
+#!/bin/bash
+
+sessions=$(zellij ls -sn)
+
+chosen=$(echo -e "$sessions" | dmenu -l 10 -i -p "Choose a session:")
+
+if [ -n "$chosen" ]; then
+    kitty zellij attach "$chosen"
+fi
