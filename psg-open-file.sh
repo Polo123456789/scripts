@@ -9,6 +9,7 @@ get_options() {
     if [ "$CURRENT_DIRECTORY" = "$HOME" ]; then
         echo "@clipboard"
     fi
+    echo "@list_all_files"
     ls -1a
 }
 
@@ -18,6 +19,13 @@ while [ ! -f "$SELECTION" ]; do
     if [ "$SELECTION" = "@clip" ] || [ "$SELECTION" = "@clipboard" ]; then
         xdg-open "$(xclip -o -selection clipboard)"
         exit 0
+    elif [ "$SELECTION" = "@list_all_files" ]; then
+        all_files=$(find . -type f | sed 's|./||')
+        SELECTION=$(echo -e "$all_files" | dmenu -i -p "File:" -l 15)
+        if [ -z "$SELECTION" ]; then
+            exit 0
+        fi
+        xdg-open "$SELECTION"
     elif [ -d "$SELECTION" ]; then
         CURRENT_DIRECTORY="$SELECTION"
     elif [ -f "$SELECTION" ]; then
