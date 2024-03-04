@@ -1,8 +1,10 @@
 #!/bin/bash
 
-sessions=$(zellij ls -sn)
+sessions=$(zellij ls -n)
 
 chosen=$(echo -e "$sessions" | dmenu -l 10 -i -p "Choose a session:")
+
+chosen=$(echo "$chosen" | awk '{print $1}')
 
 if [ -n "$chosen" ]; then
     kitty zellij attach "$chosen"
