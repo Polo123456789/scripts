@@ -19,6 +19,7 @@ if [[ "$1" == "input" ]]; then
     pass "$selected_password" | xdotool type --clearmodifiers --file -
 elif [[ "$1" == "copy" ]]; then
     pass -c "$selected_password"
+    notify-send "Password copied to clipboard"
 else
     echo "Invalid argument"
     echo "$selected_password"
