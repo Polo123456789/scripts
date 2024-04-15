@@ -70,12 +70,13 @@ sleep $SLEEP_TIME
 
 if [ ! -d "$SNAPSHOT_ROOT" ]; then
     notify-send -u critical "Backup" "No se encontro el directorio de snapshots. No se puede realizar el backup."
-    exit 1
+    exit 0
 fi
 
 notify-send -u critical "Backup" "Iniciando backup..."
 
 $HOME/scripts/list-installed-packages > $HOME/scripts/.logs/installed-packages
+cp $HOME/scripts/.logs/installed-packages $HOME/docs/linux/installed-packages
 
 systemd-inhibit nice -n $BACKUP_NICENESS $AUTOROTATE_SCRIPT -c "$CONFIG_FILE"
 if [ $? -eq 0 ]; then
