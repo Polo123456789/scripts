@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cmd="$@"
+
+if [ -z "$cmd" ]; then
+  echo "Usage: $0 <command>"
+  echo "Confirm that the command should be run"
+  exit 1
+fi
+
+echo "Command: $cmd"
+read -p "Run this command? [y/N] " -n 1 -r
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo
+  eval "$cmd"
+else
+  echo
+  echo "Aborted"
+fi
