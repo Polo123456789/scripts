@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    selected=$(find ~/repos/oficina ~/repos/personales ~/dotfiles ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+selected_name=$(basename "$selected")
+tmux_resurrect_dir="$HOME/.local/share/tmux/resurrect"
+tmux_resurrect_last="last"
+
+
+if [[ -f "$tmux_resurrect_dir/$selected_name" ]]; then
+	cd $tmux_resurrect_dir
+	ln -sf $selected_name $tmux_resurrect_last
+	$HOME/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh
+	exit 0
+fi
+
+if ! tmux has-session -t=$selected_name 2> /dev/null; then
+    tmux new-session -ds $selected_name -c $selected
+fi
+
+tmux switch-client -t $selected_name

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+current_dir=$(pwd)
+session_name=$(basename $current_dir)
+
+$HOME/.config/tmux/plugins/tmux-resurrect/scripts/save.sh
+
+tmux_resurrect_dir="$HOME/.local/share/tmux/resurrect"
+tmux_resurrect_last="last"
+
+cd $tmux_resurrect_dir
+
+last_session=$(readlink "$tmux_resurrect_last")
+
+mv $last_session $session_name
+ln -sf $session_name $tmux_resurrect_last
