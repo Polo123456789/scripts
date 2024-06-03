@@ -8,7 +8,8 @@ else
 				 	~/dotfiles \
 				 	~/ \
 				 	~/docs/congregacion/discursos/publicos \
-				 	-mindepth 1 -maxdepth 1 -type d | fzf --reverse)
+				 	-mindepth 1 -maxdepth 1 -type d \
+					-not -path '*/.*'| fzf --reverse)
 fi
 
 if [[ -z $selected ]]; then
