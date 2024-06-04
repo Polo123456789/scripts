@@ -1,22 +1,33 @@
 #!/bin/bash
 
-if [[ $# -eq 1 ]]; then
-    selected=$1
-else
-    selected=$(find ~/repos/oficina \
+PATH_OPTIONS=$(find ~/repos/oficina \
 				 	~/repos/personales \
 				 	~/dotfiles \
 				 	~/ \
 				 	~/docs/congregacion/discursos/publicos \
 				 	-mindepth 1 -maxdepth 1 -type d \
-					-not -path '*/.*'| fzf --reverse)
+					-not -path '*/.*')
+
+TMUX_SESSIONS=$(tmux list-sessions -F "tmux:#{session_name}" 2> /dev/null)
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    selected=$(printf "$PATH_OPTIONS\n$TMUX_SESSIONS"| fzf --reverse)
 fi
 
 if [[ -z $selected ]]; then
     exit 0
 fi
 
+if [[ $selected == "tmux:"* ]]; then
+	tmux switch-client -t ${selected:5}
+	exit 0
+fi
+
 selected_name=$(basename "$selected")
+
+
 tmux_resurrect_dir="$HOME/.local/share/tmux/resurrect"
 tmux_resurrect_last="last"
 
