@@ -5,6 +5,7 @@ PATH_OPTIONS=$(find ~/repos/oficina \
 				 	~/dotfiles \
 				 	~/ \
 				 	~/docs/congregacion/discursos/publicos \
+					~/docs/oficina \
 				 	-mindepth 1 -maxdepth 1 -type d \
 					-not -path '*/.*')
 
@@ -25,7 +26,7 @@ if [[ $selected == "tmux:"* ]]; then
 	exit 0
 fi
 
-selected_name=$(basename "$selected")
+selected_name=$(basename "$selected" | tr . _)
 
 
 tmux_resurrect_dir="$HOME/.local/share/tmux/resurrect"
