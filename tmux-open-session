@@ -5,9 +5,10 @@ PATH_OPTIONS=$(find ~/repos/oficina \
 				 	~/dotfiles \
 				 	~/ \
 				 	~/docs/congregacion/discursos/publicos \
+				 	~/docs/congregacion/discursos/ \
 					~/docs/oficina \
 				 	-mindepth 1 -maxdepth 1 -type d \
-					-not -path '*/.*')
+					-not -path '*/.*' | sed 's/\/home\/pablo\///g')
 
 TMUX_SESSIONS=$(tmux list-sessions -F "tmux:#{session_name}" 2> /dev/null)
 
@@ -28,7 +29,6 @@ fi
 
 selected_name=$(basename "$selected" | tr . _)
 
-
 tmux_resurrect_dir="$HOME/.local/share/tmux/resurrect"
 tmux_resurrect_last="last"
 
@@ -39,7 +39,7 @@ if ! tmux has-session -t=$selected_name 2> /dev/null; then
 		$HOME/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh
 		exit 0
 	else
-		tmux new-session -ds $selected_name -c $selected
+		tmux new-session -ds $selected_name -c /home/pablo/$selected
 	fi
 fi
 
