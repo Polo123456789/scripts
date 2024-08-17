@@ -8,14 +8,12 @@ help() {
 	echo ""
 	echo "  -h, --help                display this help and exit"
 	echo ""
-	echo "  --resync                  setup the sync for the first time, remote being the source of truth"
 	echo ""
 	echo "  -l, --logs                display the last logs"
 	echo "  -v, --verbose             verbose output"
 	echo "  -c, --clear               clear the logs, and lockfiles"
 	echo ""
-	echo "  --old-bisync              syncs the local directory with the remote directory, not deleting any files"
-	echo "  --old-force [push|pull]   force push or pull, always vebose, no logfile"
+	echo "  --force [push|pull]   force push or pull, always vebose, no logfile"
 }
 
 CONFIG_FILE="$HOME/.config/rclone-drive-sync/conf"
@@ -30,7 +28,7 @@ else
 	LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
 	RCLONE_FLAGS="-Lv --fast-list --log-file=$LOGFILE --drive-chunk-size=64M"
 	RCLONE_BISYNC_FLAGS="--create-empty-src-dirs --compare size,modtime,checksum --slow-hash-sync-only --resilient -M --fix-case"
-	RCLONE_BIN="/home/pablo/.local/bin/rclone"
+	RCLONE_BIN="rclone"
 fi
 
 log () {
@@ -40,12 +38,12 @@ log () {
 log_error () {
 	echo "$(date) - $*" >> "$LOGFILE"
 	echo "$(date) - $*" >> "$LAST_RUN_FAILED"
-	notify-send -u critical "$*"
+	echo CRITICAL "$*"
 }
 
 log_info () {
 	echo "$(date) - $*" >> "$LOGFILE"
-	notify-send -u low "$*"
+	echo LOW: "$*"
 }
 
 follow_logs() {
@@ -195,7 +193,7 @@ while true; do
 			help
 			exit 0
 			;;
-		--old-force)
+		--force | -f)
 			case "$2" in
 				push)
 					old_forced_push
@@ -231,7 +229,7 @@ while true; do
 			exit 0
 			;;
 		--)
-			bisync
+			old_normal_sync
 			exit 0
 			;;
 		*)
