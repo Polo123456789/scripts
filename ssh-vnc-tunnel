@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ssh_cmd="ssh -L 5910:localhost:5900"
+
+
+# Get hosts from ~/.ssh/config
+hosts=$(awk '/^Host / {print $2}' ~/.ssh/config)
+host=$(echo "$hosts" | fzf --height 25 --reverse --prompt="VNC Tunnel:")
+if [ -n "$host" ]; then
+	$ssh_cmd $host
+fi
