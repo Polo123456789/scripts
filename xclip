@@ -1,0 +1,16 @@
+#!/bin/bash
+
+while true; do
+	case $1 in
+		-i)
+			termux-clipboard-set
+			;;
+		-o)
+			termux-clipboard-get
+			;;
+		*)
+			;;
+	esac
+done
+
+
