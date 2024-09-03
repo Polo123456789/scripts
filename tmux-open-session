@@ -2,13 +2,14 @@
 
 PATH_OPTIONS=$(find ~/repos/oficina \
 				 	~/repos/personales \
+					~/storage/ \
 				 	~/dotfiles \
 				 	~/ \
 				 	~/docs/congregacion/discursos/publicos \
 				 	~/docs/congregacion/discursos/ \
 					~/docs/oficina \
 				 	-mindepth 1 -maxdepth 1 -type d \
-					-not -path '*/.*' | sed 's/\/home\/pablo\///g')
+					-not -path '*\/.*' | sed 's/\/data\/data\/com.termux\/files\/home\///g')
 
 TMUX_SESSIONS=$(tmux list-sessions -F "tmux:#{session_name}" 2> /dev/null)
 
@@ -39,7 +40,7 @@ if ! tmux has-session -t=$selected_name 2> /dev/null; then
 		$HOME/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh
 		exit 0
 	else
-		tmux new-session -ds $selected_name -c /home/pablo/$selected
+		tmux new-session -ds $selected_name -c $HOME/$selected
 	fi
 fi
 
