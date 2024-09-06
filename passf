@@ -14,15 +14,4 @@ fi
 selected_password=${selected_password:2}
 selected_password=${selected_password%.gpg}
 
-if [[ "$1" == "input" ]]; then
-    sleep 1
-    pass "$selected_password" | xdotool type --clearmodifiers --file -
-elif [[ "$1" == "copy" ]]; then
-    pass -c "$selected_password"
-
-    i3-msg "move to scratchpad"
-    sleep 50
-else
-    echo "Invalid argument"
-    echo "$selected_password"
-fi
+pass -c "$selected_password"
