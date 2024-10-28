@@ -6,6 +6,7 @@ places_to_check=(
 	"$HOME/scripts"
 	"$HOME/dotfiles"
 	"$HOME/docs/congregacion/discursos"
+	"$HOME/.password-store"
 )
 
 last_fetched_file="$HOME/.local/share/check-repos/last_fetched"
