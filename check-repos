@@ -1,0 +1,97 @@
+#!/bin/bash -e
+
+places_to_check=(
+	"$HOME/repos/oficina"
+	"$HOME/repos/personales"
+	"$HOME/scripts"
+	"$HOME/dotfiles"
+	"$HOME/docs/congregacion/discursos"
+)
+
+last_fetched_file="$HOME/.local/share/check-repos/last_fetched"
+
+# Yellow
+pretty_print_dirty() {
+	echo -e "\033[33m$1\033[0m (dirty)"
+}
+
+pretty_print_ahead() {
+	echo -e "\033[32m$1\033[0m (ahead)"
+}
+
+pretty_print_behind() {
+	echo -e "\033[31m$1\033[0m (behind)"
+}
+
+remove_home() {
+	echo "$1" | sed "s|$HOME/|~/|"
+}
+
+# If it hasnt fetched today, it should
+check_should_fetch() {
+	if [ ! -f "$last_fetched_file" ]; then
+		echo 0
+		return
+	fi
+
+	last_fetched=$(date -r "$last_fetched_file" +%Y-%m-%d)
+	today=$(date +%Y-%m-%d)
+
+	if [ "$last_fetched" != "$today" ]; then
+		echo 0
+		return
+	fi
+
+	echo 1
+	return
+}
+should_fetch=$(check_should_fetch)
+
+check_repo() {
+	local repo="$1"
+	cd "$repo"
+	
+	if [ "$should_fetch" -eq "0" ]; then
+		echo "Fetching $(remove_home $repo)"
+		if ! git fetch > /dev/null 2>&1; then
+			return
+		fi
+	fi
+	
+	if [ -n "$(git status -s)" ]; then
+		pretty_print_dirty "$(remove_home $repo)"
+		return
+	fi
+
+	if grep "ahead" <(git status -sb) > /dev/null 2>&1; then
+		pretty_print_ahead "$(remove_home $repo)"
+		return
+	fi
+
+	if grep "behind" <(git status -sb) > /dev/null 2>&1; then
+		pretty_print_behind "$(remove_home $repo)"
+		return
+	fi
+}
+
+pwait() {
+    while [ $(jobs -p | wc -l) -ge $1 ]; do
+        sleep 1
+    done
+}
+
+if [ $should_fetch -eq 0 ]; then
+	mkdir -p "$(dirname "$last_fetched_file")"
+	date > "$last_fetched_file"
+
+	echo "Please wait while fetching all repos (This will only happen once a day)..."
+fi
+
+for place in "${places_to_check[@]}"; do
+	for repo in $(find "$place" -maxdepth 3 -type d -name .git); do
+		check_repo "$(dirname "$repo")" &
+		pwait 16
+	done
+done
+
+wait
