@@ -14,5 +14,5 @@ fi
 selected_password=${selected_password:2}
 selected_password=${selected_password%.gpg}
 
-echo $selected_password
+basename $selected_password
 pass -c "$selected_password"
