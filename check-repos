@@ -6,7 +6,7 @@ places_to_check=(
 	"$HOME/scripts"
 	"$HOME/dotfiles"
 	"$HOME/docs/congregacion/discursos"
-	"$HOME/.password-store"
+	"$HOME/sync/"
 )
 
 last_fetched_file="$HOME/.local/share/check-repos/last_fetched"
@@ -51,7 +51,7 @@ should_fetch=$(check_should_fetch)
 check_repo() {
 	local repo="$1"
 	cd "$repo"
-	
+
 	if [ "$should_fetch" -eq "0" ]; then
 		echo "Fetching $(remove_home $repo)"
 		if ! git fetch > /dev/null 2>&1; then
