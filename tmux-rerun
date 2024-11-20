@@ -1,0 +1,4 @@
+#!/bin/bash
+
+tmux next-window
+tmux send-keys Up Enter
