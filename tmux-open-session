@@ -5,6 +5,7 @@ PATH_OPTIONS=$(find ~/repos/oficina \
 					~/storage/ \
 				 	~/dotfiles \
 				 	~/ \
+					~/docs/ \
 				 	~/docs/congregacion/discursos/publicos \
 				 	~/docs/congregacion/discursos/ \
 					~/docs/oficina \
