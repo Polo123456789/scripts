@@ -1,0 +1,3 @@
+#!/bin/bash
+
+termux-clipboard-get | tmux load-buffer - && tmux paste-buffer
