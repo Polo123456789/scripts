@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -euo pipefail
+
+DISPLAY=:0
+SCRIPT_FILE="$HOME/scripts/kopia-backup-home"
+LOGFILE="$HOME/scripts/.logs/kopia-backup-home.log"
+
+SERVICE_NAME="kopia-backup-home"
+SYSTEMD_SERVICE_NAME="kopia-backup-home.service"
+SYSTEMD_TIMER_NAME="kopia-backup-home.timer"
+SYSTEMD_USER_PATH="$HOME/.config/systemd/user"
+
+SYSTEMD_SERVICE_CONTENTS="
+[Unit]
+Description=kopia backup home
+
+[Service]
+Type=oneshot
+ExecStart=$SCRIPT_FILE
+"
+
+SYSTEMD_TIMER_CONTENTS="
+[Unit]
+Description=Run kopia-backup-home every day
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+"
+
+if [ "${1:-}" == "--install" ]; then
+    echo "Installing $SERVICE_NAME"
+    mkdir -p "$SYSTEMD_USER_PATH"
+    echo "$SYSTEMD_SERVICE_CONTENTS" > "$SYSTEMD_USER_PATH/$SYSTEMD_SERVICE_NAME"
+    echo "$SYSTEMD_TIMER_CONTENTS" > "$SYSTEMD_USER_PATH/$SYSTEMD_TIMER_NAME"
+    systemctl --user enable "$SYSTEMD_TIMER_NAME"
+    systemctl --user start "$SYSTEMD_TIMER_NAME"
+    echo "Done"
+    exit 0
+fi
+
+notify-send -u critical "Backup" "Iniciando backup..."
+
+$HOME/scripts/list-installed-packages > $HOME/scripts/.logs/installed-packages
+cp $HOME/scripts/.logs/installed-packages $HOME/docs/linux/installed-packages
+
+set +e
+systemd-inhibit kopia snapshot create --all &> $LOGFILE
+if [ $? -eq 0 ]; then
+    notify-send -u critical "Backup" "Completado"
+else
+    notify-send -u critical "Backup" "Error"
+    exit 1
+fi
