@@ -9,7 +9,8 @@ get_options() {
     if [ "$CURRENT_DIRECTORY" = "$HOME" ]; then
         echo "@clipboard"
     fi
-    echo "@list_all_files"
+    echo "@list_all"
+    echo "@open_dir"
     ls -1a
 }
 
@@ -26,6 +27,9 @@ while [ ! -f "$SELECTION" ]; do
             exit 0
         fi
         xdg-open "$SELECTION"
+    elif [ "$SELECTION" = "@open_directory" ]; then
+        xdg-open .
+        exit 0
     elif [ -d "$SELECTION" ]; then
         CURRENT_DIRECTORY="$SELECTION"
     elif [ -f "$SELECTION" ]; then
