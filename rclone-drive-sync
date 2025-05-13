@@ -30,7 +30,7 @@ else
 	LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
 	RCLONE_FLAGS="-Lv --fast-list --log-file=$LOGFILE --drive-chunk-size=64M"
 	RCLONE_BISYNC_FLAGS="--create-empty-src-dirs --compare size,modtime,checksum --slow-hash-sync-only --resilient -M --fix-case"
-	RCLONE_BIN="/home/pablo/.local/bin/rclone"
+	RCLONE_BIN="/bin/rclone"
 fi
 
 log () {
