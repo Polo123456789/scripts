@@ -91,7 +91,7 @@ fi
 for place in "${places_to_check[@]}"; do
 	for repo in $(find "$place" -maxdepth 3 -type d -name .git); do
 		check_repo "$(dirname "$repo")" &
-		pwait 16
+        pwait 32
 	done
 done
 
