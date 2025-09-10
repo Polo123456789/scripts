@@ -16,10 +16,12 @@ selected_password=${selected_password%.gpg}
 
 if [[ "$1" == "input" ]]; then
     sleep 1
+    # TODO: Replace with wtype tool, e.g. pass "$selected_password" | wtype
     pass "$selected_password" | xdotool type --clearmodifiers --file -
 elif [[ "$1" == "copy" ]]; then
     pass -c "$selected_password"
 
+    # TODO: Replace with swaymsg tool, e.g. swaymsg "move to scratchpad"
     i3-msg "move to scratchpad"
     sleep 50
 else

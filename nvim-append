@@ -1,0 +1,11 @@
+#!/bin/bash
+
+SOCKET_PATH="/tmp/nvim-append.sock"
+
+if [ ! -S "$SOCKET_PATH" ]; then
+  echo "Error: El socket de Neovim no está disponible en $SOCKET_PATH" >&2
+  echo "Asegúrate de que Neovim esté corriendo con el servidor de socket activo." >&2
+  exit 1
+fi
+
+cat - | nc -N -U "$SOCKET_PATH"

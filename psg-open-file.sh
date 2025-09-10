@@ -18,6 +18,7 @@ while [ ! -f "$SELECTION" ]; do
     cd "$CURRENT_DIRECTORY"
     SELECTION=$(get_options | dmenu -i -p "File:" -l 15)
     if [ "$SELECTION" = "@clip" ] || [ "$SELECTION" = "@clipboard" ]; then
+        # TODO: Replace with wl-paste tool, e.g. xdg-open "$(wl-paste)"
         xdg-open "$(xclip -o -selection clipboard)"
         exit 0
     elif [ "$SELECTION" = "@list_all_files" ]; then

@@ -2,9 +2,9 @@
 
 case $1 in
     up)
-        brightnessctl set +120
+        brightnessctl set +1200
         ;;
     down)
-        brightnessctl set 120-
+        brightnessctl set 1200-
         ;;
 esac

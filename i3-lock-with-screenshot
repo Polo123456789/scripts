@@ -17,6 +17,7 @@ elif [[ $1 == "pixelate" ]]; then
     convert $TMPDIR/$FILENAME -scale 10% -scale 1000% $TMPDIR/$FILENAME
 fi
 
+# TODO: Replace with swaylock tool, e.g. swaylock -i $TMPDIR/$FILENAME &
 i3lock -befi $TMPDIR/$FILENAME --nofork -p win &
 
 sleep 2

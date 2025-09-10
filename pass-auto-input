@@ -18,9 +18,12 @@ echo "Writing in 1..."
 sleep 1
 
 if [ "$2" != "--no-user" ]; then
+    # TODO: Replace with wtype tool, e.g. wtype "$username"
     xdotool type --clearmodifiers "$username"
+    # TODO: Replace with wtype tool, e.g. wtype "$(printf '\t')"
     xdotool key Tab
 fi
+# TODO: Replace with wtype tool, e.g. wtype "$password"
 xdotool type --clearmodifiers "$password"
 
 unset username password
