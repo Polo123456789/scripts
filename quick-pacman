@@ -1,0 +1,61 @@
+#!/bin/bash
+
+cmd=${1:-"menu"}
+
+commands=(
+    "install"
+    "remove"
+    "update"
+)
+
+float_term() {
+    kitty --class psFloatingControl "$@"
+}
+
+fzf_args=(
+  --multi
+  --preview 'pacman -Sii {1}'
+  --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select, F11: maximize'
+  --preview-label-pos='bottom'
+  --preview-window 'down:50%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --color 'pointer:green,marker:green'
+)
+
+case $cmd in
+    "menu")
+        chosen=$(printf '%s\n' "${commands[@]}" | rofi -dmenu -p "Pacman")
+        if [[ -n "$chosen" ]]; then
+            float_term tmux new -s pacman "$0 $chosen"
+        fi
+        exit 0
+        ;;
+    "install")
+        pkg=$(pacman -Slq | fzf "${fzf_args[@]}")
+        if [[ -n "$pkg" ]]; then
+            sudo pacman -S $pkg
+            read -p "Press [Enter] to continue..."
+        fi
+        ;;
+    "remove")
+        pkg=$(pacman -Qeq | fzf "${fzf_args[@]}")
+        if [[ -n "$pkg" ]]; then
+            sudo pacman -Rns $pkg
+            read -p "Press [Enter] to continue..."
+        fi
+        ;;
+    "update")
+        xdg-open "https://archlinux.org/"
+        echo "Remember to check the Arch Linux news for any important updates!"
+        echo "AUR updates are not handled by this script."
+        sudo pacman -Syu
+        read -p "Press [Enter] to continue..."
+        ;;
+esac
+
+if [[ -n "$TMUX" ]]; then
+    tmux detach-client
+    tmux kill-session -t pacman
+fi
