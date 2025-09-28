@@ -17,14 +17,14 @@ fi
 
 case $1 in
     mount)
-        device=$(echo "$devices" | dmenu -i -p "Mount device" -l 10)
+        device=$(echo "$devices" | rofi -dmenu -i -p "Mount device" -l 10)
         if [ -z "$device" ]; then
             exit 0
         fi
         udiskie-mount $device
         ;;
     unmount)
-        device=$(echo "$devices" | dmenu -i -p "Unmount device" -l 10)
+        device=$(echo "$devices" | rofi -dmenu -i -p "Unmount device" -l 10)
         if [ -z "$device" ]; then
             exit 0
         fi

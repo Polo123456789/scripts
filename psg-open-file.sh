@@ -16,19 +16,19 @@ get_options() {
 
 while [ ! -f "$SELECTION" ]; do
     cd "$CURRENT_DIRECTORY"
-    SELECTION=$(get_options | dmenu -i -p "File:" -l 15)
+    SELECTION=$(get_options | rofi -dmenu -i -p "File" -l 15)
     if [ "$SELECTION" = "@clip" ] || [ "$SELECTION" = "@clipboard" ]; then
         # TODO: Replace with wl-paste tool, e.g. xdg-open "$(wl-paste)"
         xdg-open "$(xclip -o -selection clipboard)"
         exit 0
-    elif [ "$SELECTION" = "@list_all_files" ]; then
+    elif [ "$SELECTION" = "@list_all" ]; then
         all_files=$(find . -type f | sed 's|./||')
-        SELECTION=$(echo -e "$all_files" | dmenu -i -p "File:" -l 15)
+        SELECTION=$(echo -e "$all_files" | rofi -dmenu -i -p "File" -l 15)
         if [ -z "$SELECTION" ]; then
             exit 0
         fi
         xdg-open "$SELECTION"
-    elif [ "$SELECTION" = "@open_directory" ]; then
+    elif [ "$SELECTION" = "@open_dir" ]; then
         xdg-open .
         exit 0
     elif [ -d "$SELECTION" ]; then

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-selected=$(bluetoothctl devices Paired | dmenu -i -l 10 -p "Connect to: " | awk '{print $2}')
+selected=$(bluetoothctl devices Paired | rofi -dmenu -i -l 10 -p "Connect to" | awk '{print $2}')
 
 if [ -z "$selected" ]; then
     exit 0

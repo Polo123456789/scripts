@@ -15,10 +15,10 @@
 # V3
 history_file="/home/pablo/scripts/.logs/run-prompt-history"
 
-cmd=$(cat $history_file | dmenu -l 20 -p "Comando:")
+cmd=$(cat $history_file | rofi -dmenu -l 20 -p "Comando")
 if [[ -z "$cmd" ]]; then
     # Press exit to run without showing history
-    cmd=$(dmenu -p "Comando:")
+    cmd=$(rofi -dmenu -p "Comando")
     if [[ -z "$cmd" ]]; then
         # Exit again means quit
         exit 0

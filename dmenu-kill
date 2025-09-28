@@ -1,7 +1,7 @@
 #!/bin/bash
 
 processes=$(ps -u $USER -o pid,comm,pcpu,pmem,args --sort=-pcpu)
-selected=$(echo "$processes" | dmenu -i -l 25 -p "Kill:" | awk '{print $1}')
+selected=$(echo "$processes" | rofi -dmenu -i -l 25 -p "Kill" | awk '{print $1}')
 
 if [ -n "$selected" ]; then
     kill $selected

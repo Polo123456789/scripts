@@ -70,7 +70,7 @@ select-client() {
     if [[ $ON_TTY -eq 1 ]]; then
         local selected=$(echo-client-list | fzf --prompt="Select a client: " --reverse --height=25)
     else
-        local selected=$(echo-client-list | dmenu -i -l 25 -p "Select a client: ")
+        local selected=$(echo-client-list | rofi -dmenu -i -l 25 -p "Select a client")
     fi
     echo "$selected"
 }

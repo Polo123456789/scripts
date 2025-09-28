@@ -5,7 +5,7 @@ passwords_dir="$HOME/.password-store/"
 cd "$passwords_dir"
 
 passwords=$(find -type f -name "*.gpg")
-selected_password=$(echo "$passwords" | dmenu -i -l 15 -p "Password: ")
+selected_password=$(echo "$passwords" | rofi -dmenu -i -l 15 -p "Password")
 
 if [[ -z "$selected_password" ]]; then
     exit 1

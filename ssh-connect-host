@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 
 # Get hosts from ~/.ssh/config
@@ -16,7 +16,7 @@ if [ -t 1 ]; then
         $ssh_cmd $host
     fi
 else
-    host=$(echo "$hosts" | dmenu -i -l 25 -p "SSH to: ")
+    host=$(echo "$hosts" | rofi -dmenu -i -l 25 -p "SSH to")
 
     if [ -n "$host" ]; then
         kitty kitty +kitten ssh $host
