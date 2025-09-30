@@ -26,6 +26,11 @@ fzf_args=(
 
 case $cmd in
     "menu")
+        if tmux has-session -t pacman 2>/dev/null; then
+            float_term tmux attach-session -t pacman
+            exit 0
+        fi
+
         chosen=$(printf '%s\n' "${commands[@]}" | rofi -dmenu -p "Pacman")
         if [[ -n "$chosen" ]]; then
             float_term tmux new -s pacman "$0 $chosen"
@@ -51,6 +56,7 @@ case $cmd in
         echo "Remember to check the Arch Linux news for any important updates!"
         echo "AUR updates are not handled by this script."
         sudo pacman -Syu
+        notify-send "System update complete"
         read -p "Press [Enter] to continue..."
         ;;
 esac
