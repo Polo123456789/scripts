@@ -1,0 +1,106 @@
+#!/home/pablo/.local/opt/local-python-packages/bin/python3
+
+import subprocess
+import sys
+from datetime import datetime, date, timedelta
+import plotext as plt
+
+def is_git_repo():
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True
+        )
+        return result.stdout.strip() == "true"
+    except subprocess.CalledProcessError:
+        return False
+
+def get_commits(since, until):
+    cmd = [
+        "git", "log",
+        f"--since={since}",
+        f"--until={until}",
+        '--pretty=format:%h %an %ad %s',
+        '--date=short'
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+    commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
+    return commits
+
+def get_line_stats(since, until):
+    cmd = [
+        "git", "log",
+        f"--since={since}",
+        f"--until={until}",
+        "--pretty=tformat:",
+        "--numstat"
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+    added, removed = 0, 0
+    for line in result.stdout.strip().split('\n'):
+        if line:
+            parts = line.split('\t')
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                added += int(parts[0])
+                removed += int(parts[1])
+    return added, removed
+
+def main():
+    if not is_git_repo():
+        print("Este directorio no es un repositorio git.")
+        sys.exit(1)
+
+    today = date.today()
+    since = today.strftime("%Y-%m-%dT00:00:00")
+    until = today.strftime("%Y-%m-%dT23:59:59")
+
+    dias = []
+    agregadas = []
+    eliminadas = []
+    for i in range(14, -1, -1):
+        dia = today - timedelta(days=i)
+        s = dia.strftime("%Y-%m-%dT00:00:00")
+        u = dia.strftime("%Y-%m-%dT23:59:59")
+        a, r = get_line_stats(s, u)
+        dias.append(dia.strftime("%d-%b"))
+        agregadas.append(a)
+        eliminadas.append(r)
+
+    plt.theme('default')
+    plt.plotsize(80, 20)
+    plt.multiple_bar(dias, [agregadas, eliminadas], color=["green", "red"])
+    plt.xlabel("Día")
+    plt.ylabel("")
+    plt.show()
+
+    # --- Resumen de hoy ---
+    commits = get_commits(since, until)
+    added, removed = get_line_stats(since, until)
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    ORANGE = '\033[38;5;208m'
+    RESET = '\033[0m'
+    print(f"Hoy: {GREEN}+{added}{RESET} {RED}-{removed}{RESET}")
+    if commits:
+        for c in commits:
+            parts = c.split()
+            msg = c
+            if len(parts) >= 4:
+                mensaje = ' '.join(parts[3:])
+                first = mensaje[0] if mensaje else ''
+                if first == '+':
+                    msg = f"{GREEN}{c}{RESET}"
+                elif first == '-':
+                    msg = f"{RED}{c}{RESET}"
+                elif first in ['~', '=']:
+                    msg = f"{YELLOW}{c}{RESET}"
+                elif first == '*':
+                    msg = f"{ORANGE}{c}{RESET}"
+            print(f"  - {msg}")
+    else:
+        print("  (No hay commits hoy)")
+
+
+if __name__ == "__main__":
+    main()
