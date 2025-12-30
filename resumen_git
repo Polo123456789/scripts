@@ -57,7 +57,7 @@ def main():
     dias = []
     agregadas = []
     eliminadas = []
-    for i in range(14, -1, -1):
+    for i in range(30, -1, -1):
         dia = today - timedelta(days=i)
         s = dia.strftime("%Y-%m-%dT00:00:00")
         u = dia.strftime("%Y-%m-%dT23:59:59")

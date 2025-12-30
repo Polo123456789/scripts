@@ -49,7 +49,7 @@ $HOME/scripts/list-installed-packages > $HOME/scripts/.logs/installed-packages
 cp $HOME/scripts/.logs/installed-packages $HOME/docs/linux/installed-packages
 
 set +e
-systemd-inhibit kopia snapshot create --all &> $LOGFILE
+systemd-inhibit $HOME/go/bin/kopia snapshot create --all &> $LOGFILE
 if [ $? -eq 0 ]; then
     notify-send -u critical "Backup" "Completado"
 else
