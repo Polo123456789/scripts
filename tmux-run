@@ -1,0 +1,11 @@
+#!/bin/bash
+
+run_script=".tmux-run"
+
+if [ -f "$run_script" ]; then
+    bash "$run_script"
+else
+    echo "No tmux run script found."
+fi
+
+read -p "Press any key to return..." -n 1 -s
