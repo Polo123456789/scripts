@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+err() { echo "$*" >&2; }
+
+# I didnt forget to install it, trust me :)
+if ! command -v gum >/dev/null 2>&1; then
+    err "gum is not installed"
+    exit 1
+fi
+
+REPO_TOP=$(git rev-parse --show-toplevel)
+cd "$REPO_TOP"
+
+WORKTREES=()
+while IFS= read -r line; do
+    if [[ $line == worktree* ]]; then
+        path=${line#worktree }
+        WORKTREES+=("$path")
+    fi
+done < <(git worktree list --porcelain 2>/dev/null || true)
+
+CHOICES=("+ Create")
+for p in "${WORKTREES[@]}"; do
+    CHOICES+=("$p")
+done
+
+CHOICE=$(gum choose --height=10 --cursor=">" --selected=1 "${CHOICES[@]}")
+
+if [[ $CHOICE == "+ Create" ]]; then
+    NAME=$(gum input --prompt "Branch Name: " --value "")
+    if [[ -z "$NAME" ]]; then
+        exit 1
+    fi
+
+    DEFAULT_PATH=".worktrees/${NAME}"
+    PATH_CHOICE=$(gum input --prompt "Path: " --value "$DEFAULT_PATH")
+    mkdir -p "$(dirname "$PATH_CHOICE")"
+    BRANCH="${NAME}"
+    if ! git show-ref --verify --quiet "refs/heads/${BRANCH}"; then
+        git branch "$BRANCH" HEAD
+    fi
+    git worktree add "$PATH_CHOICE" "$BRANCH"
+    TARGET_PATH="$PATH_CHOICE"
+else
+    TARGET_PATH="$CHOICE"
+fi
+
+REPO_NAME=$(basename "$REPO_TOP")
+WT_NAME=$(basename "$TARGET_PATH")
+DEFAULT_SESSION="${REPO_NAME}_${WT_NAME}"
+SESSION_NAME=$(gum input --prompt "Session Name: " --value "$DEFAULT_SESSION")
+
+SELECTED_NAME="$SESSION_NAME"
+
+if ! tmux has-session -t "$SELECTED_NAME" 2>/dev/null; then
+    tmux new-session -ds "$SELECTED_NAME" -c "$TARGET_PATH"
+fi
+
+if tmux list-clients >/dev/null 2>&1; then
+    tmux switch-client -t "$SELECTED_NAME"
+else
+    tmux attach -t "$SELECTED_NAME"
+fi
