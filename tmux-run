@@ -8,4 +8,8 @@ else
     echo "No tmux run script found."
 fi
 
+if [ $? -eq 69 ]; then
+    exit 69
+fi
+
 read -p "Press any key to return..." -n 1 -s
