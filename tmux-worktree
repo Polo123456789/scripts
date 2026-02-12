@@ -13,6 +13,15 @@ fi
 REPO_TOP=$(git rev-parse --show-toplevel)
 cd "$REPO_TOP"
 
+# Script is called when creating a worktree
+#
+# $1 is the path to the repository
+# $2 is the path to the worktree
+#
+# The script should copy all the necesary files for the worktree to work, like
+# .env files or sqlite dbs.
+SETUP_WORKTREE_SCRIPT="$REPO_TOP/.tmux-worktree"
+
 WORKTREES=()
 while IFS= read -r line; do
     if [[ $line == worktree* ]]; then
@@ -42,6 +51,9 @@ if [[ $CHOICE == "+ Create" ]]; then
         git branch "$BRANCH" HEAD
     fi
     git worktree add "$PATH_CHOICE" "$BRANCH"
+    if [[ -f "$SETUP_WORKTREE_SCRIPT" ]]; then
+        bash "$SETUP_WORKTREE_SCRIPT" "$REPO_TOP" "$PATH_CHOICE"
+    fi
     TARGET_PATH="$PATH_CHOICE"
 else
     TARGET_PATH="$CHOICE"

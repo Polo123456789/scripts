@@ -2,6 +2,7 @@
 
 source $HOME/.nvm/nvm.sh
 
+export OPENCODE_SERVER_USERNAME="opencode"
 export OPENCODE_SERVER_PASSWORD=$(cat $HOME/.config/opencode-server/password.txt)
 
 SYSTEMD_SERVICE_PATH="$HOME/.config/systemd/user/opencode-server.service"
@@ -40,6 +41,11 @@ elif [[ $1 == stop ]]; then
 elif [[ $1 == start ]]; then
     systemctl --user start opencode-server.service
     systemctl --user status opencode-server.service
+elif [[ $1 == restart ]]; then
+    systemctl --user restart opencode-server.service
+    systemctl --user status opencode-server.service
+elif [[ $1 == attach ]]; then
+    opencode attach http://0.0.0.0:4096
 else
     cd ~/docs/assistant
     opencode serve --hostname 0.0.0.0 2>&1 > $HOME/scripts/.logs/opencode-server.log
