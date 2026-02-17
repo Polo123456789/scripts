@@ -20,7 +20,7 @@ else
 fi
 
 # Split horizontal primero: arriba 70%, abajo 30% (build pane 1)
-tmux split-window -v -p 30
+tmux split-window -v -p 25
 tmux send-keys -t 1 "$BUILD_CMD" C-m
 
 # En panel arriba (0), split vertical: izquierda 65%, derecha 35%

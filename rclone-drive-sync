@@ -14,24 +14,26 @@ help() {
 	echo "  -v, --verbose             verbose output"
 	echo "  -c, --clear               clear the logs, and lockfiles"
 	echo ""
-	echo "  --old-bisync              syncs the local directory with the remote directory, not deleting any files"
-	echo "  --old-force [push|pull]   force push or pull, always vebose, no logfile"
+    echo "  --old-bisync              syncs the local directory with the remote directory, not deleting any files"
+    echo "  --old-force [push|pull]   force push or pull, always vebose, no logfile"
+    echo "  --force                   pass --force to rclone bisync (boolean)"
 }
 
 CONFIG_FILE="$HOME/.config/rclone-drive-sync/conf"
 
 if [ -f "$CONFIG_FILE" ]; then
 	source "$CONFIG_FILE"
-else
-	LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
-	LOCAL_DIR="$HOME/sync"
-	REMOTE_DIR="gdrive:rclone"
-	LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
-	LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
-	RCLONE_FLAGS="-Lv --fast-list --log-file=$LOGFILE --drive-chunk-size=64M"
-	RCLONE_BISYNC_FLAGS="--create-empty-src-dirs --compare size,modtime,checksum --slow-hash-sync-only --resilient -M --fix-case"
-	RCLONE_BIN="/bin/rclone"
-fi
+	else
+		LOCKFILE="$HOME/scripts/.locks/rclone-drive-sync.lock"
+		LOCAL_DIR="$HOME/sync"
+		REMOTE_DIR="gdrive:rclone"
+		LOGFILE="$HOME/scripts/.logs/rclone-drive-sync"
+		LAST_RUN_FAILED="$HOME/scripts/.logs/rclone-drive-sync-failed"
+		RCLONE_FLAGS="-Lv --fast-list --log-file=$LOGFILE --drive-chunk-size=64M"
+		RCLONE_BISYNC_FLAGS="--create-empty-src-dirs --compare size,modtime,checksum --slow-hash-sync-only --resilient -M --fix-case"
+		RCLONE_BIN="/bin/rclone"
+		FORCE=false
+	fi
 
 log () {
 	echo "$(date) - $*" >> "$LOGFILE"
@@ -155,9 +157,6 @@ resync() {
 	pre_sync
 	follow_logs
 
-	log "Starting first sync, remote being the source of truth. You have 3 seconds to cancel"
-	sleep 3
-
 	$RCLONE_BIN bisync "$REMOTE_DIR" "$LOCAL_DIR" $RCLONE_FLAGS $RCLONE_BISYNC_FLAGS --resync -n
 
 	log "Check if everything looks right. If so, confirm"
@@ -177,12 +176,17 @@ resync() {
 bisync() {
 	pre_sync
 
-	$RCLONE_BIN bisync "$REMOTE_DIR" "$LOCAL_DIR" $RCLONE_FLAGS $RCLONE_BISYNC_FLAGS
+    FORCE_FLAG=""
+    if [ "$FORCE" = true ]; then
+        FORCE_FLAG="--force"
+    fi
+
+	$RCLONE_BIN bisync "$REMOTE_DIR" "$LOCAL_DIR" $RCLONE_FLAGS $RCLONE_BISYNC_FLAGS $FORCE_FLAG
 
 	post_sync
 }
 
-opts=$(getopt -o hf:lvc --long help,resync,logs,verbose,clear,old-bisync,old-force: -- "$@")
+opts=$(getopt -o hf:lvc --long help,resync,logs,verbose,clear,old-bisync,old-force:,force -- "$@")
 if [ $? -ne 0 ]; then
 	help
 	exit 1
@@ -225,6 +229,9 @@ while true; do
 		--old-bisync)
 			old_normal_sync
 			exit 0
+			;;
+		--force)
+			FORCE=true
 			;;
 		--resync)
 			resync
