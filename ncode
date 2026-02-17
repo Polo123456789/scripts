@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+if [[ -z "${TMUX:-}" ]]; then
+    echo "Este script debe ejecutarse dentro de una sesión de tmux"
+    exit 1
+fi
+
+# Check for .ncode build script
+if [[ -x ".ncode" ]]; then
+    BUILD_CMD="./.ncode"
+else
+    touch .ncode
+    chmod +x .ncode
+    echo '#!/bin/bash' > .ncode
+    echo '# Add your build command here' >> .ncode
+    BUILD_CMD="echo 'Archivo .ncode creado. Edítalo con tu comando de build.'"
+fi
+
+# Split horizontal primero: arriba 70%, abajo 30% (build pane 1)
+tmux split-window -v -p 30
+tmux send-keys -t 1 "$BUILD_CMD" C-m
+
+# En panel arriba (0), split vertical: izquierda 65%, derecha 35%
+tmux select-pane -t 0
+tmux split-window -h -p 35
+
+# Panel derecha-arriba (1): opencode
+tmux send-keys -t 1 'opencode' C-m
+
+# Panel izquierda-arriba (0): nvim con focus
+tmux send-keys -t 0 'nvim; tmux kill-pane -a' C-m
+tmux select-pane -t 0
