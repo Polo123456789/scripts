@@ -8,28 +8,43 @@ if [[ -z "${TMUX:-}" ]]; then
     exit 1
 fi
 
-# Check for .ncode build script
-if [[ -x ".ncode" ]]; then
-    BUILD_CMD="./.ncode"
-else
-    touch .ncode
-    chmod +x .ncode
-    echo '#!/bin/bash' > .ncode
-    echo '# Add your build command here' >> .ncode
-    BUILD_CMD="echo 'Archivo .ncode creado. Edítalo con tu comando de build.'"
+# Verificar existencia de .ncode
+if [[ ! -e ".ncode" ]]; then
+    echo "Error: archivo .ncode no encontrado. Crea .ncode en este directorio." >&2
+    exit 1
 fi
 
-# Split horizontal primero: arriba 70%, abajo 30% (build pane 1)
-tmux split-window -v -p 25
-tmux send-keys -t 1 "$BUILD_CMD" C-m
+# Si el archivo existe pero está vacío, abrimos la interfaz sin panel de build
+if [[ ! -s ".ncode" ]]; then
+    HAS_BUILD=0
+else
+    HAS_BUILD=1
+    if [[ -x ".ncode" ]]; then
+        BUILD_CMD="./.ncode"
+    else
+        BUILD_CMD="bash .ncode"
+    fi
+fi
 
-# En panel arriba (0), split vertical: izquierda 65%, derecha 35%
-tmux select-pane -t 0
-tmux split-window -h -p 35
-
-# Panel derecha-arriba (1): opencode
-tmux send-keys -t 1 'opencode' C-m
-
-# Panel izquierda-arriba (0): nvim con focus
-tmux send-keys -t 0 'nvim; tmux kill-pane -a' C-m
-tmux select-pane -t 0
+if (( HAS_BUILD )); then
+    # Split horizontal primero: arriba ~75%, abajo ~25% (panel de build)
+    tmux split-window -v -p 25
+    # Ejecutar comando de build en el nuevo panel (antes de dividir la parte superior)
+    tmux send-keys -t 1 "$BUILD_CMD" C-m
+    # Panel arriba (0), split vertical: izquierda 65%, derecha 35%
+    tmux select-pane -t 0
+    tmux split-window -h -p 35
+    # Panel derecha-arriba (1): opencode
+    tmux send-keys -t 1 'opencode' C-m
+    # Panel izquierda-arriba (0): nvim con focus
+    tmux send-keys -t 0 'nvim; tmux kill-pane -a' C-m
+    tmux select-pane -t 0
+else
+    # No hay panel de build: sólo dividir la ventana en dos columnas
+    tmux split-window -h -p 35
+    # Panel derecha (1): opencode
+    tmux send-keys -t 1 'opencode' C-m
+    # Panel izquierda (0): nvim con focus
+    tmux send-keys -t 0 'nvim; tmux kill-pane -a' C-m
+    tmux select-pane -t 0
+fi
