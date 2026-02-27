@@ -11,12 +11,19 @@ PATH_OPTIONS=$(find ~/repos/oficina \
 				 	-mindepth 1 -maxdepth 1 -type d \
 					-not -path '*/.*' | sed 's/\/home\/pablo\///g')
 
-TMUX_SESSIONS=$(tmux list-sessions -F "tmux:#{session_name}" 2> /dev/null)
+TMUX_SESSIONS=$(tmux list-sessions -F "#{session_name}" 2> /dev/null)
+CURRENT_TMUX_SESSION=$(tmux display-message -p "#S" 2> /dev/null)
+if [[ -n $TMUX_SESSIONS ]]; then
+	if [[ -n $CURRENT_TMUX_SESSION ]]; then
+		TMUX_SESSIONS=$(printf "%s\n" "$TMUX_SESSIONS" | awk -v cur="$CURRENT_TMUX_SESSION" '$0==cur {next} {print} END{ if (cur!="") print cur }')
+	fi
+	TMUX_SESSIONS=$(printf "%s\n" "$TMUX_SESSIONS" | sed 's/^/tmux:/')
+fi
 
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$(printf "$PATH_OPTIONS\n$TMUX_SESSIONS"| fzf --reverse)
+    selected=$(printf "$TMUX_SESSIONS\n$PATH_OPTIONS"| fzf --reverse)
 fi
 
 if [[ -z $selected ]]; then
