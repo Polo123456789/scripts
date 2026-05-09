@@ -2,10 +2,24 @@
 
 run_script=".tmux-run"
 
+template='#!/bin/bash
+# Tip: exit 69 to skip the "press any key" prompt
+
+echo "Hello from tmux-run!"'
+
 if [ -f "$run_script" ]; then
     bash "$run_script"
 else
-    echo "No tmux run script found."
+    echo "No tmux-run script found."
+    echo "Press c to create or any other to return..."
+    read -n 1 -s key
+    if [ "$key" = "c" ] || [ "$key" = "C" ]; then
+        echo "$template" > "$run_script"
+        nvim "$run_script"
+        bash "$run_script"
+    else
+        exit 0
+    fi
 fi
 
 if [ $? -eq 69 ]; then
