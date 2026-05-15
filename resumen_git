@@ -2,7 +2,9 @@
 
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date, timedelta
+import os
 import plotext as plt
 
 def is_git_repo():
@@ -45,6 +47,13 @@ def get_line_stats(since, until):
                 removed += int(parts[1])
     return added, removed
 
+
+def get_day_line_stats(dia):
+    since = dia.strftime("%Y-%m-%dT00:00:00")
+    until = dia.strftime("%Y-%m-%dT23:59:59")
+    added, removed = get_line_stats(since, until)
+    return dia.strftime("%d-%b"), added, removed
+
 def main():
     if not is_git_repo():
         print("Este directorio no es un repositorio git.")
@@ -54,17 +63,15 @@ def main():
     since = today.strftime("%Y-%m-%dT00:00:00")
     until = today.strftime("%Y-%m-%dT23:59:59")
 
-    dias = []
-    agregadas = []
-    eliminadas = []
-    for i in range(30, -1, -1):
-        dia = today - timedelta(days=i)
-        s = dia.strftime("%Y-%m-%dT00:00:00")
-        u = dia.strftime("%Y-%m-%dT23:59:59")
-        a, r = get_line_stats(s, u)
-        dias.append(dia.strftime("%d-%b"))
-        agregadas.append(a)
-        eliminadas.append(r)
+    day_range = [today - timedelta(days=i) for i in range(30, -1, -1)]
+    max_workers = min(len(day_range), os.cpu_count())
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        day_stats = list(executor.map(get_day_line_stats, day_range))
+
+    dias = [label for label, _, _ in day_stats]
+    agregadas = [added for _, added, _ in day_stats]
+    eliminadas = [removed for _, _, removed in day_stats]
 
     plt.theme('default')
     plt.plotsize(80, 20)
@@ -75,7 +82,8 @@ def main():
 
     # --- Resumen de hoy ---
     commits = get_commits(since, until)
-    added, removed = get_line_stats(since, until)
+    added = agregadas[-1]
+    removed = eliminadas[-1]
     GREEN = '\033[92m'
     RED = '\033[91m'
     YELLOW = '\033[93m'
