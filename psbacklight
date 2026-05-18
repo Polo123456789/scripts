@@ -7,4 +7,7 @@ case $1 in
     down)
         brightnessctl set 1200-
         ;;
+    set)
+        brightnessctl set "${2}%"
+        ;;
 esac
