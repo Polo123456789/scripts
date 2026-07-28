@@ -12,6 +12,69 @@ float_term() {
     kitty --class psFloatingControl "$@"
 }
 
+summarize_update_logs() {
+    local pacman_status=$1
+    local today
+    local important_logs
+    local prompt
+    local codex_error_file
+
+    today=$(date +%F)
+    important_logs=$(
+        awk -v day="$today" '
+            index($0, "[" day "T") == 1 &&
+            tolower($0) ~ /(error|warning|pacnew|pacsave|failed|failure)/
+        ' /var/log/pacman.log
+    )
+
+    echo
+    echo "Important pacman messages for $today:"
+    if [[ -z "$important_logs" ]]; then
+        echo "No important messages found."
+        return
+    fi
+
+    printf '%s\n' "$important_logs"
+    echo
+    echo "Codex summary:"
+
+    if ! command -v codex >/dev/null; then
+        echo "Codex is not installed; skipping summary."
+        return
+    fi
+
+    prompt="Analyze only the pacman log lines provided through stdin.
+The pacman command exited with status $pacman_status.
+Respond in Spanish with a brief summary. State first whether anything requires
+attention. Consolidate duplicate messages, explain the likely cause of each
+group, and distinguish actionable problems from harmless warnings. Suggest
+commands only when they are justified by the provided lines. Do not run
+commands, inspect files, or invent context that is not present in the input."
+
+    if ! codex_error_file=$(mktemp); then
+        echo "Could not create a temporary file; skipping Codex summary."
+        return
+    fi
+
+    if ! printf '%s\n' "$important_logs" |
+        codex exec \
+            --ephemeral \
+            --sandbox read-only \
+            --skip-git-repo-check \
+            --ignore-user-config \
+            --ignore-rules \
+            --color never \
+            --model gpt-5.6-luna \
+            -c 'model_reasoning_effort="high"' \
+            "$prompt" 2>"$codex_error_file"
+    then
+        echo "Codex could not generate the summary."
+        sed -n '1,20p' "$codex_error_file"
+    fi
+
+    rm -f -- "$codex_error_file"
+}
+
 fzf_args=(
   --multi
   --preview 'pacman -Sii {1}'
@@ -56,7 +119,14 @@ case $cmd in
         echo "Remember to check the Arch Linux news for any important updates!"
         echo "AUR updates are not handled by this script."
         sudo pacman -Syu
-        notify-send "System update complete"
+        pacman_status=$?
+        summarize_update_logs "$pacman_status"
+        if (( pacman_status == 0 )); then
+            notify-send "System update complete"
+        else
+            notify-send -u critical "System update failed" \
+                "pacman exited with status $pacman_status"
+        fi
         read -p "Press [Enter] to continue..."
         ;;
 esac
