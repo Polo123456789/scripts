@@ -8,6 +8,7 @@ PATH_OPTIONS=$(find ~/repos/oficina \
 				 	~/docs/congregacion/discursos/publicos \
 				 	~/docs/congregacion/discursos/ \
 					~/docs/oficina \
+                    ~/docs/oficina/proyectos \
 				 	-mindepth 1 -maxdepth 1 -type d \
 					-not -path '*/.*' | sed 's/\/home\/pablo\///g')
 
