@@ -10,3 +10,4 @@ echo "" >> "$1"
 echo "set -euo pipefail" >> "$1"
 echo "IFS=$'\n\t'" >> "$1"
 chmod +x "$1"
+nvim $1
