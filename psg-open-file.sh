@@ -26,6 +26,7 @@ fi
 get_options() {
     if [ "$CURRENT_DIRECTORY" = "$HOME" ]; then
         echo "@clipboard"
+        echo "@recents"
     fi
     echo "@list_all"
     echo "@open_dir"
@@ -44,6 +45,14 @@ while [ ! -f "$SELECTION" ]; do
     if [ "$SELECTION" = "@clip" ] || [ "$SELECTION" = "@clipboard" ]; then
         # TODO: Replace with wl-paste tool, e.g. xdg-open "$(wl-paste)"
         xdg-open "$(xclip -o -selection clipboard)"
+        exit 0
+    elif [ "$SELECTION" = "@recents" ]; then
+        SELECTION=$("$HOME/scripts/list-recent-files" | rofi -dmenu -i -p "Recientes" -l 15)
+        if [ -f "$SELECTION" ]; then
+            CURRENT_DIRECTORY=$(dirname -- "$SELECTION")
+            save_run
+            xdg-open "$SELECTION"
+        fi
         exit 0
     elif [ "$SELECTION" = "@list_all" ]; then
         all_files=$(find . -type f | sed 's|./||')

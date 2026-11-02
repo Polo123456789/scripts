@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+
+import os
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
+import xml.etree.ElementTree as ET
+
+data_home = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
+try:
+    entries = ET.parse(data_home / "recently-used.xbel").getroot().findall("bookmark")
+except (OSError, ET.ParseError):
+    entries = []
+
+for entry in sorted(entries, key=lambda e: e.get("modified", ""), reverse=True):
+    uri = entry.get("href", "")
+    parsed = urlsplit(uri)
+    if parsed.scheme != "file" or parsed.netloc not in ("", "localhost"):
+        continue
+    path = unquote(parsed.path)
+    if Path(path).is_file() and "\n" not in path and "\r" not in path:
+        print(path)
